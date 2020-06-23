@@ -60,8 +60,8 @@ public class TTP extends Layer {
 
     @Override
     public Response handleReceivedRequest(Request request) {
-        if(request.type == RequestType.TTP_REGISTER) {
-
+        if(request.type == RequestType.TTP_REGISTER && systemParameters.AUTOMATIC_INITIALIZATION) {
+            return register(request);
         }
         return switch(request.type) {
             case TTP_AUTH_CHALLENGE -> authChallenge(request);

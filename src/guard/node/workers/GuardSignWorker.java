@@ -1,7 +1,7 @@
 package guard.node.workers;
 
 import crypto.memento.SignatureShareMemento;
-import guard.node.AuthNode;
+import guard.node.Authentication;
 import guard.node.RoutingTranscript;
 import guard.node.packets.requests.GetGuardSignatureRequest;
 import guard.node.packets.responses.PartialSignatureResponse;
@@ -11,20 +11,20 @@ public class GuardSignWorker implements Runnable {
 
     private final String guardAddress;
     private final RoutingTranscript transcript;
-    private final AuthNode authNode;
+    private final Authentication authentication;
 
     public SignatureShareMemento signatureShare;
     public String errorMsg;
 
-    public GuardSignWorker(String guardAddress, RoutingTranscript transcript, AuthNode authNode) {
+    public GuardSignWorker(String guardAddress, RoutingTranscript transcript, Authentication authentication) {
         this.guardAddress = guardAddress;
         this.transcript = transcript;
-        this.authNode = authNode;
+        this.authentication = authentication;
     }
 
     @Override
     public void run() {
-        Response r = authNode.send(guardAddress, new GetGuardSignatureRequest(transcript));
+        Response r = authentication.send(guardAddress, new GetGuardSignatureRequest(transcript));
         if(r == null) {
             errorMsg = "could not connect to the guard";
         } else if(r.isError()) {

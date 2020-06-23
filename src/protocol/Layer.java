@@ -5,6 +5,10 @@ public abstract class Layer {
     protected Layer overlay;
     protected Layer underlay;
 
+    public Layer getUnderlay() {
+        return underlay;
+    }
+
     public void setOverlay(Layer overlay) {
         this.overlay = overlay;
     }

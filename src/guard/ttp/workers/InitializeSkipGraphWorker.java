@@ -15,51 +15,54 @@ public class InitializeSkipGraphWorker implements Runnable {
         this.registrations = registrations;
     }
 
+    private void runPhase(PhaseWorker[] workers) {
+        Thread[] threads = new Thread[workers.length];
+        for(int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(workers[i]);
+            threads[i].start();
+        }
+
+        for(Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(PhaseWorker w : workers) {
+            if(w.response.isError()) {
+                System.err.println("Error during initialization: " + w.response.errorMessage);
+            }
+        }
+    }
+
     @Override
     public void run() {
+        System.out.println("Automatic initialization through TTP started...");
+
         Object[] addresses = registrations.keySet().toArray();
 
-        Thread[] insertThreads = new Thread[addresses.length];
-        String globalInitiatorAddress = (String) addresses[0];
+        // Create the workers.
+        String initiatorAddress = (String) addresses[0];
+        InsertNodeWorker[] insertWorkers = new InsertNodeWorker[addresses.length];
         for(int i = 0; i < addresses.length; i++) {
-            insertThreads[i] = new Thread(new InsertNodeWorker(ttp, (String) addresses[i], (i == 0) ? null : globalInitiatorAddress));
-            insertThreads[i].start();
+            insertWorkers[i] = new InsertNodeWorker(ttp, (String) addresses[i], (i == 0) ? null : initiatorAddress);
         }
-
-        for(Thread t : insertThreads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        Thread[] constructThreads = new Thread[addresses.length];
+        ConstructNodeWorker[] constructWorkers = new ConstructNodeWorker[addresses.length];
         for(int i = 0; i < addresses.length; i++) {
-            constructThreads[i] = new Thread(new ConstructNodeWorker(ttp, (String) addresses[i]));
-            constructThreads[i].start();
+            constructWorkers[i] = new ConstructNodeWorker(ttp, (String) addresses[i]);
         }
-
-        for(Thread t : constructThreads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        Thread[] assignThreads = new Thread[addresses.length];
+        AssignNodeWorker[] assignWorkers = new AssignNodeWorker[addresses.length];
         for(int i = 0; i < addresses.length; i++) {
-            assignThreads[i] = new Thread(new AssignNodeWorker(ttp, (String) addresses[i]));
-            assignThreads[i].start();
+            assignWorkers[i] = new AssignNodeWorker(ttp, (String) addresses[i]);
         }
-
-        for(Thread t : assignThreads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        // Run the workers in the correct order.
+        System.out.println("Insertions started...");
+        runPhase(insertWorkers);
+        System.out.println("Construction started...");
+        runPhase(constructWorkers);
+        System.out.println("Assignment started...");
+        runPhase(assignWorkers);
     }
 }

@@ -2,16 +2,14 @@ package userinterface;
 
 import protocol.Layer;
 import protocol.Request;
+import protocol.RequestType;
 import protocol.Response;
 
-public class UserInterface extends Layer {
+public abstract class UserInterface extends Layer {
 
-    public UserInterface(int port) {
-    }
+    public abstract void showMenu();
 
-    public void showMenu() {
-        System.out.println();
-    }
+    public abstract void handleUserInput(int input);
 
     @Override
     public Response handleReceivedRequest(Request request) {

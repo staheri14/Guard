@@ -1,9 +1,10 @@
 package userinterface;
 
-import guard.node.AuthNode;
+import guard.node.Authentication;
 import guard.ttp.SystemParameters;
 import guard.ttp.TTP;
 import middleware.Middleware;
+import skipnode.SkipNode;
 
 public class Constructors {
 
@@ -14,12 +15,23 @@ public class Constructors {
         return ttp;
     }
 
-    public static AuthNode createAuthNode(String ttpAddress, int port) {
+    public static SkipNode createAuthNode(String ttpAddress, int port) {
         Middleware middleware = new Middleware(port);
-        AuthNode authNode = new AuthNode(ttpAddress, middleware.getAddress());
-        middleware.initializeHost(authNode);
-        authNode.setUnderlay(middleware);
-        return authNode;
+        Authentication authentication = new Authentication(ttpAddress);
+        SkipNode skipNode = new SkipNode();
+        middleware.initializeHost(authentication);
+        authentication.setUnderlay(middleware);
+        authentication.setOverlay(skipNode);
+        skipNode.setUnderlay(authentication);
+        return skipNode;
+    }
+
+    public static NodeUserInterface createNodeUserInterface(String ttpAddress, int port) {
+        SkipNode authNode = createAuthNode(ttpAddress, port);
+        NodeUserInterface userInterface = new NodeUserInterface();
+        authNode.setOverlay(userInterface);
+        userInterface.setUnderlay(authNode);
+        return userInterface;
     }
 
 }

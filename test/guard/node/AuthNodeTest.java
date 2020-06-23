@@ -32,29 +32,29 @@ class AuthNodeTest {
 
     void testSystem(LocalSystem localSystem) {
         // Registration:
-        for(AuthNode node : localSystem.getNodes()) {
+        for(Authentication node : localSystem.getAuthLayers()) {
             Assertions.assertFalse(node.nodeRegister().isError());
         }
 
         // Insertion:
         for(int i = 0; i < localSystem.getNodes().length; i++) {
-            AuthNode node = localSystem.getNodes()[i];
+            Authentication node = localSystem.getAuthLayers()[i];
             String introducerAddress = (i == 0) ? null : localSystem.getNodes()[i-1].getAddress();
             Assertions.assertFalse(node.authInsert(new InsertRequest(introducerAddress)).isError());
         }
 
         // Construction:
-        for(AuthNode node : localSystem.getNodes()) {
+        for(Authentication node : localSystem.getAuthLayers()) {
             Assertions.assertFalse(node.nodeConstruct().isError());
         }
 
         // Guard assignment:
-        for(AuthNode node : localSystem.getNodes()) {
+        for(Authentication node : localSystem.getAuthLayers()) {
             Assertions.assertFalse(node.nodeAssign().isError());
         }
 
         // Searches:
-        for(AuthNode node : localSystem.getNodes()) {
+        for(Authentication node : localSystem.getAuthLayers()) {
             for(int i = -1; i < localSystem.getNodes().length + 1; i++) {
                 AuthSearchResultResponse r = node.authSearchByNumID(new SearchByNumIDRequest(i));
                 int expectedResult = Math.min(localSystem.getNodes().length-1, Math.max(i, 0));

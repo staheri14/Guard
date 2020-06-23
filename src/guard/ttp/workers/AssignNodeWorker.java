@@ -4,16 +4,10 @@ import guard.node.packets.requests.NodeAssignRequest;
 import guard.ttp.TTP;
 import protocol.packets.responses.AckResponse;
 
-public class AssignNodeWorker implements Runnable {
-
-    private final TTP ttp;
-    private final String nodeAddress;
-
-    public AckResponse response;
+public class AssignNodeWorker extends PhaseWorker {
 
     public AssignNodeWorker(TTP ttp, String nodeAddress) {
-        this.ttp = ttp;
-        this.nodeAddress = nodeAddress;
+        super(ttp, nodeAddress);
     }
 
     @Override

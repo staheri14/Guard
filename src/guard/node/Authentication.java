@@ -38,16 +38,16 @@ import skipnode.packets.responses.SearchResultResponse;
 import java.util.*;
 
 
-public class AuthNode extends Layer {
+public class Authentication extends Layer {
 
     private final String ttpAddress;
+    private SkipNode skipNode;
 
     // Maintained during insertion:
     private NodeInfo leftGuardNeighbor;
     private NodeInfo rightGuardNeighbor;
 
     // Initialized at the registration phase:
-    private SkipNode skipNode;
     private PublicParameters publicParameters;
     private SystemParameters systemParameters;
     private Pairing pairing;
@@ -62,7 +62,7 @@ public class AuthNode extends Layer {
     private Element[] publicDistKey;
     private final Map<String, RetrieveGuardInfoResponse> guardInformation;
 
-    public AuthNode(String ttpAddress, String nodeAddress) {
+    public Authentication(String ttpAddress) {
         this.ttpAddress = ttpAddress;
         leftGuardNeighbor = new NodeInfo();
         rightGuardNeighbor = new NodeInfo();
@@ -70,7 +70,17 @@ public class AuthNode extends Layer {
     }
 
     @Override
+    public void setOverlay(Layer layer) {
+        if(!(layer instanceof SkipNode)) {
+            return;
+        }
+        this.overlay = layer;
+        this.skipNode = (SkipNode) layer;
+    }
+
+    @Override
     public Response handleReceivedRequest(Request request) {
+        // Only handle the authenticated search requests.
         if(request.type == RequestType.ROUTE_SEARCH_NUM_ID && request instanceof AuthRouteSearchNumIDRequest) {
             return authRouteSearchNumID((AuthRouteSearchNumIDRequest) request);
         }
@@ -79,12 +89,12 @@ public class AuthNode extends Layer {
             case NODE_CONSTRUCT -> nodeConstruct();
             case NODE_ASSIGN -> nodeAssign();
             case GET_TABLE_PROOF_ENTRY -> getTableProofEntry((GetTableProofEntryRequest) request);
+            case SEARCH_BY_NUM_ID -> authSearchByNumID((SearchByNumIDRequest) request);
             case INSERT -> authInsert((InsertRequest) request);
             case GET_GUARD_NEIGHBOR -> getGuardNeighbor((GetGuardNeighborRequest) request);
             case SET_GUARD_NEIGHBOR -> setGuardNeighbor((SetGuardNeighborRequest) request);
             case INFORM_GUARD -> informGuard((InformGuardRequest) request);
             case GET_GUARD_SIGNATURE ->  getGuardSignature((GetGuardSignatureRequest) request);
-            case SEARCH_BY_NUM_ID -> authSearchByNumID((SearchByNumIDRequest) request);
             default -> null;
         };
     }
@@ -149,6 +159,14 @@ public class AuthNode extends Layer {
     }
 
     public AuthSearchResultResponse authSearchByNumID(SearchByNumIDRequest request) {
+        // Make sure that the previous phases are complete before performing a search.
+        if(signatureKey == null) {
+            return new AuthSearchResultResponse(null, null, "not registered yet");
+        } else if(tableProof == null) {
+            return new AuthSearchResultResponse(null, null, "not constructed yet");
+        } else if(guardAddresses == null) {
+            return new AuthSearchResultResponse(null, null, "not assigned yet");
+        }
         String nonce = GuardHelpers.randomBitString(systemParameters.NONCE_LENGTH);
         AuthSearchResultResponse r = authRouteSearchNumID(new AuthRouteSearchNumIDRequest(new LinkedList<>(), request.target,
                 systemParameters.getMaxLevels(), nonce));
@@ -279,6 +297,7 @@ public class AuthNode extends Layer {
         RoutingProof rp = new RoutingProof(rt, new SignatureMemento(selfSignWorker.signature), new SignatureMemento(guardSignature));
         // Add the proof to the partial result.
         request.routingProofs.addLast(rp);
+        // Let the skip node layer handle the request.
         SearchResultResponse r = skipNode.routeSearchNumID(request);
         if(r.isError()) {
             return new AuthSearchResultResponse(null, null, r.errorMessage);
@@ -297,8 +316,7 @@ public class AuthNode extends Layer {
         if(regResponse.publicParametersMemento == null || regResponse.assignedPrivateKeyMemento == null || regResponse.systemParameters == null) {
             return new AckResponse("malformed registration response");
         }
-        skipNode = new SkipNode(regResponse.assignedNumID, regResponse.assignedNameID,  regResponse.systemParameters, this);
-        setOverlay(skipNode);
+        skipNode.initialize(regResponse.assignedNumID, regResponse.assignedNameID,  regResponse.systemParameters, this);
         systemParameters = regResponse.systemParameters;
         publicParameters = regResponse.publicParametersMemento.reconstruct();
         pairing = regResponse.publicParametersMemento.reconstructPairing();

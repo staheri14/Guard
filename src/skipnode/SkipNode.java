@@ -11,11 +11,17 @@ import skipnode.packets.responses.SearchResultResponse;
 
 public class SkipNode extends Layer {
 
-    private final LookupTable lookupTable;
-    private final NodeInfo info;
-    private final SystemParameters systemParameters;
+    private LookupTable lookupTable;
+    private NodeInfo info;
+    private SystemParameters systemParameters;
+
+    public SkipNode() {}
 
     public SkipNode(int numID, String nameID, SystemParameters systemParameters, Layer underlay) {
+        initialize(numID, nameID, systemParameters, underlay);
+    }
+
+    public void initialize(int numID, String nameID, SystemParameters systemParameters, Layer underlay) {
         lookupTable = new LookupTable(systemParameters.getNameIDLength());
         info = new NodeInfo(numID, nameID);
         info.setAddress(underlay.getAddress());

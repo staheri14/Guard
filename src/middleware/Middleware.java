@@ -61,7 +61,7 @@ public class Middleware extends Layer {
     }
 
     /**
-     * Initializes the middleware at the given port.
+     * Initializes the middleware at the given port, and sets the overlay of the middleware.
      * @param overlay the overlay of this middleware.
      * @return whether the initialization was successful or not.
      */
