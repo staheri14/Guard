@@ -1,6 +1,6 @@
 package userinterface;
 
-import guard.node.packets.requests.NodeRegisterRequest;
+import authentication.packets.requests.NodeRegisterRequest;
 import protocol.Response;
 import skipnode.packets.requests.SearchByNumIDRequest;
 

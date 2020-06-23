@@ -52,7 +52,7 @@ public class Middleware extends Layer {
         }
         MiddlewareService remote;
         try {
-            remote = (MiddlewareService) Naming.lookup("//" + address + "/node");
+            remote = (MiddlewareService) Naming.lookup("//" + address + "/authentication");
         } catch (Exception e) {
             System.err.println("[Middleware] Could not connect to the remote RMI server.");
             return null;
@@ -69,7 +69,7 @@ public class Middleware extends Layer {
         setOverlay(overlay);
         try {
             host = new MiddlewareHost(overlay, address);
-            LocateRegistry.createRegistry(port).bind("node", host);
+            LocateRegistry.createRegistry(port).bind("authentication", host);
         } catch (Exception e) {
             System.err.println("[Middleware] Could not bind.");
             e.printStackTrace();
@@ -118,7 +118,7 @@ public class Middleware extends Layer {
     @Override
     public boolean terminateLayer() {
         try {
-            Naming.unbind("//" + address + "/node");
+            Naming.unbind("//" + address + "/authentication");
         } catch (Exception e) {
             System.err.println("[Middleware] Could not terminate.");
             e.printStackTrace();

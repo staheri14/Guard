@@ -1,8 +1,8 @@
 package userinterface;
 
-import guard.node.Authentication;
-import guard.ttp.SystemParameters;
-import guard.ttp.TTP;
+import authentication.Authentication;
+import ttp.SystemParameters;
+import ttp.TTP;
 import middleware.Middleware;
 import skipnode.SkipNode;
 

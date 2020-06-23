@@ -1,6 +1,6 @@
 package skipnode;
 
-import guard.ttp.SystemParameters;
+import ttp.SystemParameters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

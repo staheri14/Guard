@@ -1,6 +1,6 @@
 package skipnode;
 
-import guard.ttp.SystemParameters;
+import ttp.SystemParameters;
 import skipnode.packets.requests.*;
 import protocol.packets.responses.AckResponse;
 import skipnode.packets.responses.NodeInfoResponse;
