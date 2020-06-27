@@ -84,6 +84,10 @@ public abstract class Layer {
         return true;
     }
 
+    /**
+     * Terminates this layer and all the lower layers.
+     * @return whether the termination was successful.
+     */
     public final boolean terminate() {
         boolean l = terminateLayer();
         if(l && underlay != null) {

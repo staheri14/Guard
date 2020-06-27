@@ -77,4 +77,11 @@ public class NodeInfo implements Serializable {
 		for(; i < name1.length() && name1.charAt(i) == name2.charAt(i) ; ++i);
 		return i;
 	}
+
+	@Override
+	public String toString() {
+		return "{Address = " + address + ", " +
+				"Num. ID = " + numID + ", " +
+				"Name ID = " + nameID + "}";
+	}
 }

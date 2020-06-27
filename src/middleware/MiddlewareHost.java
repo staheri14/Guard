@@ -29,7 +29,7 @@ public class MiddlewareHost extends UnicastRemoteObject implements MiddlewareSer
         if(response.isError()) {
             System.err.println("[UnderlayHost] " + hostAddress + " has emitted: " + response.errorMessage);
         }
-        // Piggyback the addresses.
+        // Piggyback the addresses to the response.
         response.senderAddress = hostAddress;
         response.destinationAddress = request.senderAddress;
         return response;

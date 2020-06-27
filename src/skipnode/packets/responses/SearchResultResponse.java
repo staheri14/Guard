@@ -11,4 +11,9 @@ public class SearchResultResponse extends Response {
         super(errorMessage);
         this.result = result;
     }
+
+    @Override
+    public String toString() {
+        return "{Result = " + result.toString() + "}";
+    }
 }

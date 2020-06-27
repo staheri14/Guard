@@ -7,6 +7,7 @@ import crypto.memento.PublicParametersMemento;
 import crypto.memento.SignatureMemento;
 import crypto.threshold.ThresholdScheme;
 import authentication.GuardHelpers;
+import ttp.packets.requests.AuthChallengeRequest;
 import ttp.packets.requests.RetrieveGuardKeysRequest;
 import ttp.packets.requests.RetrieveGuardsRequest;
 import ttp.packets.responses.RegistrationResponse;
@@ -15,11 +16,12 @@ import ttp.packets.responses.RetrieveGuardInfoResponse;
 import ttp.packets.responses.RetrieveGuardsResponse;
 import protocol.Request;
 import protocol.Layer;
-import protocol.RequestType;
 import protocol.Response;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TTP extends Layer {
@@ -32,11 +34,12 @@ public class TTP extends Layer {
     private final Map<String, String> nameIDAddresses;
 
     private final Map<String, String> authChallenges;
+
     private final GuardPermutation guardPermutation;
 
     private int lastNumID = 0;
 
-    public TTP(SystemParameters systemParameters, Layer underlay) {
+    public TTP(SystemParameters systemParameters) {
         this.systemParameters = systemParameters;
         registrations = new HashMap<>();
         authChallenges = new HashMap<>();
@@ -45,7 +48,10 @@ public class TTP extends Layer {
         scheme.Setup(new Authority());
         guardPermutation = new GuardPermutation(systemParameters.SYSTEM_CAPACITY);
         nameIDAddresses = new HashMap<>();
-        setUnderlay(underlay);
+    }
+
+    public List<RegisteredNodeInformation> getRegisteredNodes() {
+        return new ArrayList<>(registrations.values());
     }
 
     private boolean checkChallengeSolution(String senderAddress, SignatureMemento challengeSolution) {
@@ -60,21 +66,21 @@ public class TTP extends Layer {
 
     @Override
     public Response handleReceivedRequest(Request request) {
-        if(request.type == RequestType.TTP_REGISTER && systemParameters.AUTOMATIC_INITIALIZATION) {
-            return register(request);
-        }
         return switch(request.type) {
-            case TTP_AUTH_CHALLENGE -> authChallenge(request);
+            case TTP_AUTH_CHALLENGE -> authChallenge((AuthChallengeRequest) request);
             case TTP_REGISTER -> register(request);
             case TTP_RETRIEVE_GUARDS ->  retrieveGuards((RetrieveGuardsRequest) request);
-            case TTP_RETRIEVE_GUARD_KEYS -> retrieveGuardKeys((RetrieveGuardKeysRequest) request);
+            case TTP_RETRIEVE_GUARD_INFO -> retrieveGuardInfo((RetrieveGuardKeysRequest) request);
             default -> new Response("unknown request");
         };
     }
 
     public RegistrationResponse register(Request request) {
         if(lastNumID >= systemParameters.SYSTEM_CAPACITY) {
-            return new RegistrationResponse("system capacity reached");
+            return new RegistrationResponse("TTP.register: system capacity reached");
+        }
+        if(registrations.containsKey(request.senderAddress)) {
+            return new RegistrationResponse("TTP.register: already registered");
         }
         // Find the numerical id of the node.
         int numID = lastNumID++;
@@ -86,20 +92,23 @@ public class TTP extends Layer {
         // Construct the public parameters state to be sent over the wire.
         PublicParametersMemento publicParametersMemento = new PublicParametersMemento(scheme.getPairingParameters(),
                 scheme.getPublicParameters());
+        // Find an initiator address for the registered node so that it can insert itself into the skip graph.
+        String initiatorAddress = (registrations.isEmpty()) ? null : ((RegisteredNodeInformation) registrations.values().toArray()[0]).address;
         // Save the node information.
         registrations.put(request.senderAddress, new RegisteredNodeInformation(request.senderAddress, numID, nameID, signatureKey));
         nameIDAddresses.put(nameID, request.senderAddress);
         // Return the response.
-        return new RegistrationResponse(true, numID, nameID, signatureKeyMemento, publicParametersMemento, systemParameters);
+        return new RegistrationResponse(true, numID, nameID, signatureKeyMemento, publicParametersMemento, systemParameters, initiatorAddress);
     }
 
-    public AuthChallengeResponse authChallenge(Request request) {
+    public AuthChallengeResponse authChallenge(AuthChallengeRequest request) {
+        // Choose the correct challenge map depending on the request.
         RegisteredNodeInformation info = registrations.get(request.senderAddress);
         if(info == null) {
-            return new AuthChallengeResponse(null, "node is not registered");
+            return new AuthChallengeResponse(null, "TTP.authChallenge: node is not registered");
         }
         if(authChallenges.containsKey(request.senderAddress)) {
-            return new AuthChallengeResponse(null, "node is already being challenged");
+            return new AuthChallengeResponse(null, "TTP.authChallenge: node is already being challenged");
         }
         String challenge = GuardHelpers.randomBitString(systemParameters.MESSAGE_LENGTH);
         // Save it.
@@ -110,13 +119,13 @@ public class TTP extends Layer {
     public RetrieveGuardsResponse retrieveGuards(RetrieveGuardsRequest request) {
         // Check for authentication.
         if(!checkChallengeSolution(request.senderAddress, request.challengeSolution)) {
-            return new RetrieveGuardsResponse("could not authenticate");
+            return new RetrieveGuardsResponse("TTP.retrieveGuards: could not authenticate");
         }
         RegisteredNodeInformation nodeInformation = registrations.get(request.senderAddress);
         // Validate the table proof.
         boolean tableProofValid = TTPHelpers.verifyLookupTable(request.circularLookupTable, request.tableProof, scheme, systemParameters);
         if(!tableProofValid) {
-            return new RetrieveGuardsResponse("table proof is invalid");
+            return new RetrieveGuardsResponse("TTP.retrieveGuards: table proof is invalid");
         }
         // Save this node's verified lookup table & table proof.
         nodeInformation.circularLookupTable = request.circularLookupTable;
@@ -141,23 +150,23 @@ public class TTP extends Layer {
                 nameIDAddresses.get(guardNameIDs[1]), nameIDAddresses.get(guardNameIDs[2]), nodeInformation.guardKeys.getY());
     }
 
-    public RetrieveGuardInfoResponse retrieveGuardKeys(RetrieveGuardKeysRequest request) {
+    public RetrieveGuardInfoResponse retrieveGuardInfo(RetrieveGuardKeysRequest request) {
         // First, authenticate.
         if(!checkChallengeSolution(request.senderAddress, request.challengeSolution)) {
-            return new RetrieveGuardInfoResponse("could not authenticate");
+            return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: could not authenticate");
         }
         RegisteredNodeInformation guardInformation = registrations.get(request.senderAddress);
         if(guardInformation == null) {
-            return new RetrieveGuardInfoResponse("not registered");
+            return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: not registered");
         }
         RegisteredNodeInformation guardedInformation = registrations.get(request.guardedNodeAddress);
         if(guardedInformation == null) {
-            return new RetrieveGuardInfoResponse("not a guard");
+            return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: not a guard");
         }
         String guardNameID = guardInformation.nameID;
         // Make sure that the guard is a guard of the claimed node.
         if(!guardedInformation.guardNameIDs[request.guardIndex].equals(guardNameID)) {
-            return new RetrieveGuardInfoResponse("not a guard");
+            return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: not a guard");
         }
         // Get the guard's partial key.
         BigInteger partialKey = guardedInformation.guardKeys.getPrivateKey(request.guardIndex+1);

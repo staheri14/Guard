@@ -14,27 +14,26 @@ public class SkipNode extends Layer {
     private LookupTable lookupTable;
     private NodeInfo info;
     private SystemParameters systemParameters;
+    private String introducerAddress;
 
     public SkipNode() {}
 
-    public SkipNode(int numID, String nameID, SystemParameters systemParameters, Layer underlay) {
-        initialize(numID, nameID, systemParameters, underlay);
+    public SkipNode(int numID, String nameID, String introducerAddress, SystemParameters systemParameters, String address) {
+        initialize(numID, nameID, introducerAddress, systemParameters);
+        // Set the address separately as the underlay might not be assigned yet.
+        info.setAddress(address);
     }
 
-    public void initialize(int numID, String nameID, SystemParameters systemParameters, Layer underlay) {
+    public void initialize(int numID, String nameID, String introducerAddress, SystemParameters systemParameters) {
         lookupTable = new LookupTable(systemParameters.getNameIDLength());
         info = new NodeInfo(numID, nameID);
-        info.setAddress(underlay.getAddress());
+        info.setAddress(getAddress());
         this.systemParameters = systemParameters;
-        setUnderlay(underlay);
+        this.introducerAddress = introducerAddress;
     }
 
     public LookupTable getLookupTable() {
         return new LookupTable(lookupTable);
-    }
-
-    public NodeInfo getInfo() {
-        return new NodeInfo(info);
     }
 
     @Override
@@ -45,7 +44,7 @@ public class SkipNode extends Layer {
             case GET_RIGHT_NODE -> getRightNode((GetRightNodeRequest) request);
             case SET_LEFT_NODE -> setLeftNode((SetLeftNodeRequest) request);
             case SET_RIGHT_NODE -> setRightNode((SetRightNodeRequest) request);
-            case INSERT -> insert((InsertRequest) request);
+            case INSERT -> insert();
             case FIND_LADDER -> findLadder((FindLadderRequest) request);
             case ROUTE_SEARCH_NUM_ID -> routeSearchNumID((RouteSearchNumIDRequest) request);
             case SEARCH_BY_NUM_ID -> searchByNumID((SearchByNumIDRequest) request);
@@ -53,8 +52,16 @@ public class SkipNode extends Layer {
         };
     }
 
+    public NodeInfo getInfo() {
+        if(info == null) return null;
+        return new NodeInfo(info);
+    }
+
     public NodeInfoResponse getInfo(Request request) {
-        return new NodeInfoResponse(info, null);
+        if(info == null) {
+            return new NodeInfoResponse(null, "Not registered yet.");
+        }
+        return new NodeInfoResponse(getInfo(), null);
     }
 
     public NodeInfoResponse getLeftNode(GetLeftNodeRequest request) {
@@ -136,19 +143,19 @@ public class SkipNode extends Layer {
         return (NodeInfoResponse) neighborResponse;
     }
 
-    public AckResponse insert(InsertRequest request) {
+    public AckResponse insert() {
         // Do not insert an already inserted node.
         if(info.isInserted()) return new AckResponse(null);
         // We search through the introducer node to find the node with
         // the closest num ID.
         NodeInfo position;
-        if(request.introducerAddress == null) {
+        if(introducerAddress == null) {
             // This node is the first node of the skip graph. Simply insert it.
             info.markAsInserted();
             return new AckResponse(null);
         } else {
             // Search through the introducer of this node.
-            Response r = send(request.introducerAddress, new RouteSearchNumIDRequest(info.getNumID(), systemParameters.getMaxLevels()));
+            Response r = send(introducerAddress, new RouteSearchNumIDRequest(info.getNumID(), systemParameters.getMaxLevels()));
             if(r.isError()) {
                 return new AckResponse(r.errorMessage);
             }

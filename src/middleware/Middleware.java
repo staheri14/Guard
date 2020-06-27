@@ -88,21 +88,26 @@ public class Middleware extends Layer {
     public Response handleSentRequest(String destinationAddress, Request request) {
         // Set the request's address fields.
         request.senderAddress = address;
-        request.destinationAddress = address;
-        // Connect to the remote node.
-        MiddlewareService remote = remote(destinationAddress);
-        if(remote == null) {
-            return null;
-        }
-        // Send the request and acquire the response.
+        request.destinationAddress = destinationAddress;
         Response response;
-        try {
-            response = remote.sendRequest(request);
-        } catch (RemoteException e) {
-            System.err.println("[Middleware] Could not send the request.");
-            e.printStackTrace();
-            return null;
+        // If the destination address is this node, simply send the request back up.
+        if(destinationAddress.equals(address)) {
+            response = receive(request);
+        } else {
+            // Connect to the remote node.
+            MiddlewareService remote = remote(destinationAddress);
+            if (remote == null) {
+                return null;
+            }
+            try {
+                response = remote.sendRequest(request);
+            } catch (RemoteException e) {
+                System.err.println("[Middleware] Could not send the request.");
+                e.printStackTrace();
+                return null;
+            }
         }
+        // Error check.
         if(response.isError()) {
             System.err.println("[Middleware] " + address + " has received: " + response.errorMessage);
         }
@@ -112,6 +117,7 @@ public class Middleware extends Layer {
 
     @Override
     public Response handleReceivedRequest(Request request) {
+        // Middleware does not receive requests from the lower layer, since it is the lowermost layer.
         return null;
     }
 

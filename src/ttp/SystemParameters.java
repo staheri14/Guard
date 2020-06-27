@@ -15,13 +15,10 @@ public class SystemParameters implements Serializable {
     public final boolean VERIFY_AT_ROUTER;
     public final boolean DIRECT_ROUTE_BACK = true;
 
-    public final boolean AUTOMATIC_INITIALIZATION;
-
     public SystemParameters(int systemCapacity, boolean verifyAtInitiator, boolean verifyAtRouter, boolean automaticInitialization) {
         SYSTEM_CAPACITY = systemCapacity;
         VERIFY_AT_INITIATOR = verifyAtInitiator;
         VERIFY_AT_ROUTER = verifyAtRouter;
-        AUTOMATIC_INITIALIZATION = automaticInitialization;
     }
 
     public int getNameIDLength() {

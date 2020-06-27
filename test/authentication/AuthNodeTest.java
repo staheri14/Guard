@@ -1,5 +1,6 @@
 package authentication;
 
+import authentication.packets.requests.AuthSearchByNumIDRequest;
 import authentication.packets.responses.AuthSearchResultResponse;
 import ttp.SystemParameters;
 import org.junit.jupiter.api.Assertions;
@@ -32,31 +33,30 @@ class AuthNodeTest {
 
     void testSystem(LocalSystem localSystem) {
         // Registration:
-        for(Authentication node : localSystem.getAuthLayers()) {
-            Assertions.assertFalse(node.nodeRegister().isError());
+        for(Authentication auth : localSystem.getAuthLayers()) {
+            Assertions.assertFalse(auth.nodeRegister().isError());
         }
 
         // Insertion:
         for(int i = 0; i < localSystem.getNodes().length; i++) {
-            Authentication node = localSystem.getAuthLayers()[i];
-            String introducerAddress = (i == 0) ? null : localSystem.getNodes()[i-1].getAddress();
-            Assertions.assertFalse(node.authInsert(new InsertRequest(introducerAddress)).isError());
+            Authentication auth = localSystem.getAuthLayers()[i];
+            Assertions.assertFalse(auth.authInsert().isError());
         }
 
         // Construction:
-        for(Authentication node : localSystem.getAuthLayers()) {
-            Assertions.assertFalse(node.nodeConstruct().isError());
+        for(Authentication auth : localSystem.getAuthLayers()) {
+            Assertions.assertFalse(auth.nodeConstruct().isError());
         }
 
         // Guard assignment:
-        for(Authentication node : localSystem.getAuthLayers()) {
-            Assertions.assertFalse(node.nodeAssign().isError());
+        for(Authentication auth : localSystem.getAuthLayers()) {
+            Assertions.assertFalse(auth.nodeAssign().isError());
         }
 
         // Searches:
-        for(Authentication node : localSystem.getAuthLayers()) {
+        for(Authentication auth : localSystem.getAuthLayers()) {
             for(int i = -1; i < localSystem.getNodes().length + 1; i++) {
-                AuthSearchResultResponse r = node.authSearchByNumID(new SearchByNumIDRequest(i));
+                AuthSearchResultResponse r = auth.authSearchByNumID(new AuthSearchByNumIDRequest(i));
                 int expectedResult = Math.min(localSystem.getNodes().length-1, Math.max(i, 0));
                 Assertions.assertFalse(r.isError());
                 Assertions.assertEquals(expectedResult, r.result.getNumID());

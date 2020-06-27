@@ -19,7 +19,7 @@ public enum RequestType {
     TTP_REGISTER,
     TTP_AUTH_CHALLENGE,
     TTP_RETRIEVE_GUARDS,
-    TTP_RETRIEVE_GUARD_KEYS,
+    TTP_RETRIEVE_GUARD_INFO,
 
     // Handled by AuthNode:
     NODE_REGISTER,
@@ -29,5 +29,9 @@ public enum RequestType {
     GET_GUARD_NEIGHBOR,
     SET_GUARD_NEIGHBOR,
     INFORM_GUARD,
-    GET_GUARD_SIGNATURE
+    GET_GUARD_SIGNATURE,
+
+    // Handled by NodeUserInterface:
+    JOIN,
+    SEARCH
 }

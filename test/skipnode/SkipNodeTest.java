@@ -33,10 +33,15 @@ class SkipNodeTest {
         middleware2 = new Middleware(STARTING_PORT + 2);
         middleware3 = new Middleware(STARTING_PORT + 3);
 
-        node0 = new SkipNode( 0, "00", systemParameters, middleware0);
-        node1 = new SkipNode( 1, "01", systemParameters, middleware1);
-        node2 = new SkipNode( 2, "10", systemParameters, middleware2);
-        node3 = new SkipNode(3, "11", systemParameters, middleware3);
+        node0 = new SkipNode( 0, "00", null, systemParameters, middleware0.getAddress());
+        node1 = new SkipNode( 1, "01", middleware0.getAddress(), systemParameters, middleware1.getAddress());
+        node2 = new SkipNode( 2, "10", middleware1.getAddress(), systemParameters, middleware2.getAddress());
+        node3 = new SkipNode(3, "11", middleware2.getAddress(), systemParameters, middleware3.getAddress());
+
+        node0.setUnderlay(middleware0);
+        node1.setUnderlay(middleware1);
+        node2.setUnderlay(middleware2);
+        node3.setUnderlay(middleware3);
 
         Assertions.assertTrue(middleware0.initializeHost(node0));
         Assertions.assertTrue(middleware1.initializeHost(node1));
@@ -46,19 +51,19 @@ class SkipNodeTest {
 
     @BeforeEach
     void insert() {
-        AckResponse insertResponse = node0.insert(new InsertRequest(null));
+        AckResponse insertResponse = node0.insert();
         Assertions.assertNotNull(insertResponse);
         Assertions.assertFalse(insertResponse.isError());
 
-        insertResponse = node1.insert(new InsertRequest(middleware0.getAddress()));
+        insertResponse = node1.insert();
         Assertions.assertNotNull(insertResponse);
         Assertions.assertFalse(insertResponse.isError());
 
-        insertResponse = node2.insert(new InsertRequest(middleware1.getAddress()));
+        insertResponse = node2.insert();
         Assertions.assertNotNull(insertResponse);
         Assertions.assertFalse(insertResponse.isError());
 
-        insertResponse = node3.insert(new InsertRequest(middleware2.getAddress()));
+        insertResponse = node3.insert();
         Assertions.assertNotNull(insertResponse);
         Assertions.assertFalse(insertResponse.isError());
 

@@ -5,10 +5,7 @@ import protocol.RequestType;
 
 public class InsertRequest extends Request {
 
-    public final String introducerAddress;
-
-    public InsertRequest(String introducerAddress) {
+    public InsertRequest() {
         super(RequestType.INSERT);
-        this.introducerAddress = introducerAddress;
     }
 }

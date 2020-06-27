@@ -11,7 +11,7 @@ public class RetrieveGuardKeysRequest extends Request {
     public final int guardIndex;
 
     public RetrieveGuardKeysRequest(SignatureMemento challengeSolution, String guardedNodeAddress, int guardIndex) {
-        super(RequestType.TTP_RETRIEVE_GUARD_KEYS);
+        super(RequestType.TTP_RETRIEVE_GUARD_INFO);
         this.challengeSolution = challengeSolution;
         this.guardedNodeAddress = guardedNodeAddress;
         this.guardIndex = guardIndex;

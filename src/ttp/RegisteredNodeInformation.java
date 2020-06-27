@@ -25,4 +25,11 @@ public class RegisteredNodeInformation {
         this.nameID = nameID;
         this.signatureKey = signatureKey;
     }
+
+    @Override
+    public String toString() {
+        return "{Address = " + address + ", " +
+                "Num. ID = " + numID + ", " +
+                "Name ID = " + nameID + "}";
+    }
 }

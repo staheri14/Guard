@@ -13,6 +13,7 @@ public class RegistrationResponse extends Response {
     public final PrivateKeyMemento assignedPrivateKeyMemento;
     public final PublicParametersMemento publicParametersMemento;
     public final SystemParameters systemParameters;
+    public final String initiatorAddress;
 
     public RegistrationResponse(String errorMessage) {
         super(errorMessage);
@@ -22,11 +23,12 @@ public class RegistrationResponse extends Response {
         assignedPrivateKeyMemento = null;
         publicParametersMemento = null;
         systemParameters = null;
+        initiatorAddress = null;
     }
 
     public RegistrationResponse(boolean successful, int assignedNumID, String assignedNameID,
                                 PrivateKeyMemento assignedPrivateKeyMemento, PublicParametersMemento publicParametersMemento,
-                                SystemParameters systemParameters) {
+                                SystemParameters systemParameters, String initiatorAddress) {
         super(null);
         this.successful = successful;
         this.assignedNumID = assignedNumID;
@@ -34,5 +36,13 @@ public class RegistrationResponse extends Response {
         this.assignedPrivateKeyMemento = assignedPrivateKeyMemento;
         this.publicParametersMemento = publicParametersMemento;
         this.systemParameters = systemParameters;
+        this.initiatorAddress = initiatorAddress;
+    }
+
+    @Override
+    public String toString() {
+        return "Registration successful: " + ((successful) ? "yes" : "no") +
+                "\n" + "Assigned num. ID: " + assignedNumID +
+                "\n" + "Assigned name ID: " + assignedNameID;
     }
 }
