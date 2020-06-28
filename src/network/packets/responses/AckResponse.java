@@ -1,6 +1,6 @@
-package protocol.packets.responses;
+package network.packets.responses;
 
-import protocol.Response;
+import network.Response;
 
 public class AckResponse extends Response {
 

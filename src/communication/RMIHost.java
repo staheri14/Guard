@@ -1,18 +1,18 @@
-package middleware;
+package communication;
 
-import protocol.Layer;
-import protocol.Request;
-import protocol.Response;
+import network.Layer;
+import network.Request;
+import network.Response;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-public class MiddlewareHost extends UnicastRemoteObject implements MiddlewareService {
+public class RMIHost extends UnicastRemoteObject implements RMIService {
 
     private final Layer overlay;
     private final String hostAddress;
 
-    public MiddlewareHost(Layer overlay, String hostAddress) throws RemoteException {
+    public RMIHost(Layer overlay, String hostAddress) throws RemoteException {
         this.overlay = overlay;
         this.hostAddress = hostAddress;
     }

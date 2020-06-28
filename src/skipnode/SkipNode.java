@@ -2,11 +2,11 @@ package skipnode;
 
 import ttp.SystemParameters;
 import skipnode.packets.requests.*;
-import protocol.packets.responses.AckResponse;
+import network.packets.responses.AckResponse;
 import skipnode.packets.responses.NodeInfoResponse;
-import protocol.Request;
-import protocol.Response;
-import protocol.Layer;
+import network.Request;
+import network.Response;
+import network.Layer;
 import skipnode.packets.responses.SearchResultResponse;
 
 public class SkipNode extends Layer {
@@ -32,10 +32,6 @@ public class SkipNode extends Layer {
         this.introducerAddress = introducerAddress;
     }
 
-    public LookupTable getLookupTable() {
-        return new LookupTable(lookupTable);
-    }
-
     @Override
     public Response handleReceivedRequest(Request request) {
         return switch(request.type) {
@@ -51,6 +47,15 @@ public class SkipNode extends Layer {
             default -> null;
         };
     }
+
+    public SystemParameters getSystemParameters() {
+        return systemParameters;
+    }
+
+    public LookupTable getLookupTable() {
+        return new LookupTable(lookupTable);
+    }
+
 
     public NodeInfo getInfo() {
         if(info == null) return null;

@@ -1,13 +1,13 @@
-package protocol;
+package network;
 
-import middleware.Middleware;
-import protocol.packets.requests.PingRequest;
-import protocol.packets.responses.AckResponse;
+import communication.Communication;
+import network.packets.requests.PingRequest;
+import network.packets.responses.AckResponse;
 
 public class PingHandler extends Layer {
 
-    public PingHandler(Middleware middleware) {
-        setUnderlay(middleware);
+    public PingHandler(Communication communication) {
+        setUnderlay(communication);
     }
 
     @Override

@@ -3,8 +3,8 @@ package ttp.packets.requests;
 import crypto.memento.SignatureMemento;
 import authentication.CircularLookupTable;
 import authentication.TableProof;
-import protocol.Request;
-import protocol.RequestType;
+import network.Request;
+import network.RequestType;
 
 public class RetrieveGuardsRequest extends Request {
 

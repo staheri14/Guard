@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * This test asserts the correctness of the various methods of a lookup table.
+ */
 class LookupTableTest {
 
     static final int MAX_LEVELS = 8;

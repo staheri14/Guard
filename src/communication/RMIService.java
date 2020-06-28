@@ -1,11 +1,11 @@
-package middleware;
+package communication;
 
-import protocol.Request;
-import protocol.Response;
+import network.Request;
+import network.Response;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface MiddlewareService extends Remote {
+public interface RMIService extends Remote {
     Response sendRequest(Request request) throws RemoteException;
 }

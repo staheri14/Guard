@@ -1,8 +1,8 @@
 package ttp.packets.requests;
 
 import crypto.memento.SignatureMemento;
-import protocol.Request;
-import protocol.RequestType;
+import network.Request;
+import network.RequestType;
 
 public class RetrieveGuardKeysRequest extends Request {
 

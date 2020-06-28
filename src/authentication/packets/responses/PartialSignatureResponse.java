@@ -1,7 +1,7 @@
 package authentication.packets.responses;
 
 import crypto.memento.SignatureShareMemento;
-import protocol.Response;
+import network.Response;
 
 public class PartialSignatureResponse extends Response {
 

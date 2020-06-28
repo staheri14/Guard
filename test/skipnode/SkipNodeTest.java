@@ -5,21 +5,24 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import skipnode.packets.requests.InsertRequest;
 import skipnode.packets.requests.SearchByNumIDRequest;
-import middleware.Middleware;
-import protocol.packets.responses.AckResponse;
+import communication.Communication;
+import network.packets.responses.AckResponse;
 import skipnode.packets.responses.SearchResultResponse;
 
+/**
+ * This test creates for unauthenticated nodes and tests two fundamental skip graph operations, i.e.
+ * joining (insertion into skip graph) and lookup (numerical ID search over the skip graph.)
+ */
 class SkipNodeTest {
 
-    static final SystemParameters systemParameters = new SystemParameters(4, false, false, false);
+    static final SystemParameters systemParameters = new SystemParameters(4, false, false);
     static final int STARTING_PORT = 9090;
 
-    static Middleware middleware0;
-    static Middleware middleware1;
-    static Middleware middleware2;
-    static Middleware middleware3;
+    static Communication communication0;
+    static Communication communication1;
+    static Communication communication2;
+    static Communication communication3;
 
     static SkipNode node0;
     static SkipNode node1;
@@ -28,25 +31,25 @@ class SkipNodeTest {
 
     @BeforeAll
     static void setUp() {
-        middleware0 = new Middleware(STARTING_PORT);
-        middleware1 = new Middleware(STARTING_PORT + 1);
-        middleware2 = new Middleware(STARTING_PORT + 2);
-        middleware3 = new Middleware(STARTING_PORT + 3);
+        communication0 = new Communication(STARTING_PORT);
+        communication1 = new Communication(STARTING_PORT + 1);
+        communication2 = new Communication(STARTING_PORT + 2);
+        communication3 = new Communication(STARTING_PORT + 3);
 
-        node0 = new SkipNode( 0, "00", null, systemParameters, middleware0.getAddress());
-        node1 = new SkipNode( 1, "01", middleware0.getAddress(), systemParameters, middleware1.getAddress());
-        node2 = new SkipNode( 2, "10", middleware1.getAddress(), systemParameters, middleware2.getAddress());
-        node3 = new SkipNode(3, "11", middleware2.getAddress(), systemParameters, middleware3.getAddress());
+        node0 = new SkipNode( 0, "00", null, systemParameters, communication0.getAddress());
+        node1 = new SkipNode( 1, "01", communication0.getAddress(), systemParameters, communication1.getAddress());
+        node2 = new SkipNode( 2, "10", communication1.getAddress(), systemParameters, communication2.getAddress());
+        node3 = new SkipNode(3, "11", communication2.getAddress(), systemParameters, communication3.getAddress());
 
-        node0.setUnderlay(middleware0);
-        node1.setUnderlay(middleware1);
-        node2.setUnderlay(middleware2);
-        node3.setUnderlay(middleware3);
+        node0.setUnderlay(communication0);
+        node1.setUnderlay(communication1);
+        node2.setUnderlay(communication2);
+        node3.setUnderlay(communication3);
 
-        Assertions.assertTrue(middleware0.initializeHost(node0));
-        Assertions.assertTrue(middleware1.initializeHost(node1));
-        Assertions.assertTrue(middleware2.initializeHost(node2));
-        Assertions.assertTrue(middleware3.initializeHost(node3));
+        Assertions.assertTrue(communication0.initializeHost(node0));
+        Assertions.assertTrue(communication1.initializeHost(node1));
+        Assertions.assertTrue(communication2.initializeHost(node2));
+        Assertions.assertTrue(communication3.initializeHost(node3));
     }
 
     @BeforeEach

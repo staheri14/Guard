@@ -7,9 +7,9 @@ import java.util.Arrays;
 
 public class DistributedKeys {
 
-    private BigInteger[] privateKeys;
-    private Element[] verificationKeys;
-    private Element[] Y;
+    private final BigInteger[] privateKeys;
+    private final Element[] verificationKeys;
+    private final Element[] Y;
 
     public DistributedKeys(Element[] Y, BigInteger[] privateKeys, Element[] verificationKeys) {
         // Make sure that the elements are immutable.

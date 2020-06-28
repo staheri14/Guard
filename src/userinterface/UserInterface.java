@@ -1,10 +1,7 @@
 package userinterface;
 
-import protocol.Layer;
-import protocol.Request;
-import protocol.Response;
+import network.Layer;
 
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public abstract class UserInterface extends Layer {

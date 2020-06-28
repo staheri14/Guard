@@ -5,7 +5,7 @@ import authentication.Authentication;
 import authentication.RoutingTranscript;
 import authentication.packets.requests.GetGuardSignatureRequest;
 import authentication.packets.responses.PartialSignatureResponse;
-import protocol.Response;
+import network.Response;
 
 public class GuardSignWorker implements Runnable {
 

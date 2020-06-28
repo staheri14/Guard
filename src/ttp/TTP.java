@@ -14,9 +14,9 @@ import ttp.packets.responses.RegistrationResponse;
 import ttp.packets.responses.AuthChallengeResponse;
 import ttp.packets.responses.RetrieveGuardInfoResponse;
 import ttp.packets.responses.RetrieveGuardsResponse;
-import protocol.Request;
-import protocol.Layer;
-import protocol.Response;
+import network.Request;
+import network.Layer;
+import network.Response;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Implementation of the TTP layer.
+ */
 public class TTP extends Layer {
 
     private final ThresholdScheme scheme;
@@ -48,6 +51,10 @@ public class TTP extends Layer {
         scheme.Setup(new Authority());
         guardPermutation = new GuardPermutation(systemParameters.SYSTEM_CAPACITY);
         nameIDAddresses = new HashMap<>();
+    }
+
+    public SystemParameters getSystemParameters() {
+        return systemParameters;
     }
 
     public List<RegisteredNodeInformation> getRegisteredNodes() {

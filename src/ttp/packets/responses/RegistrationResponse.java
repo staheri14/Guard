@@ -3,7 +3,7 @@ package ttp.packets.responses;
 import crypto.memento.PrivateKeyMemento;
 import crypto.memento.PublicParametersMemento;
 import ttp.SystemParameters;
-import protocol.Response;
+import network.Response;
 
 public class RegistrationResponse extends Response {
 

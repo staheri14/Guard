@@ -1,6 +1,6 @@
 package skipnode.packets.responses;
 
-import protocol.Response;
+import network.Response;
 import skipnode.NodeInfo;
 
 public class SearchResultResponse extends Response {

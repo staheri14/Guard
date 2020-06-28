@@ -1,7 +1,7 @@
 package authentication.packets.requests;
 
-import protocol.Request;
-import protocol.RequestType;
+import network.Request;
+import network.RequestType;
 import skipnode.NodeInfo;
 
 public class SetGuardNeighborRequest extends Request {

@@ -1,8 +1,8 @@
 package authentication.packets.requests;
 
 import authentication.RoutingTranscript;
-import protocol.Request;
-import protocol.RequestType;
+import network.Request;
+import network.RequestType;
 
 public class GetGuardSignatureRequest extends Request {
 

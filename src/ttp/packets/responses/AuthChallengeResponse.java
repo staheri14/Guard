@@ -1,6 +1,6 @@
 package ttp.packets.responses;
 
-import protocol.Response;
+import network.Response;
 
 public class AuthChallengeResponse extends Response {
 

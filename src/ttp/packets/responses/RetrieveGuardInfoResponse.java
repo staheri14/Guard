@@ -1,7 +1,7 @@
 package ttp.packets.responses;
 
 import skipnode.LookupTable;
-import protocol.Response;
+import network.Response;
 
 import java.math.BigInteger;
 

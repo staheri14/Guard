@@ -1,4 +1,4 @@
-package protocol;
+package network;
 
 public enum RequestType {
     // Handled by PingHandler (for testing):
@@ -33,5 +33,7 @@ public enum RequestType {
 
     // Handled by NodeUserInterface:
     JOIN,
-    SEARCH
+    SEARCH,
+    INITIALIZE,
+    EXPERIMENT,
 }

@@ -5,32 +5,38 @@ import authentication.packets.responses.AuthSearchResultResponse;
 import ttp.SystemParameters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import skipnode.packets.requests.InsertRequest;
-import skipnode.packets.requests.SearchByNumIDRequest;
-import userinterface.LocalSystem;
+import misc.LocalSystem;
 
+/**
+ * This test constructs a local authenticated skip graph and tests their correct construction &
+ * the lookup operation correctness on them.
+ */
 class AuthNodeTest {
 
     static final int STARTING_PORT = 8080;
 
     @Test
     void fourNodeTest() {
-        SystemParameters systemParameters = new SystemParameters(4, true, true, false);
+        SystemParameters systemParameters = new SystemParameters(4, true, true);
         testSystem(new LocalSystem(systemParameters, STARTING_PORT));
     }
 
     @Test
     void eightNodeTest() {
-        SystemParameters systemParameters = new SystemParameters(8, true, true, false);
+        SystemParameters systemParameters = new SystemParameters(8, true, true);
         testSystem(new LocalSystem(systemParameters, STARTING_PORT));
     }
 
     @Test
     void sixteenNodeTest() {
-        SystemParameters systemParameters = new SystemParameters(16, true, true, false);
+        SystemParameters systemParameters = new SystemParameters(16, true, true);
         testSystem(new LocalSystem(systemParameters, STARTING_PORT));
     }
 
+    /**
+     * Asserts the correct construction and search operations in the given local authenticated skip graph.
+     * @param localSystem local authenticated skip graph.
+     */
     void testSystem(LocalSystem localSystem) {
         // Registration:
         for(Authentication auth : localSystem.getAuthLayers()) {

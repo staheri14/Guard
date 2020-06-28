@@ -2,7 +2,7 @@ package ttp.packets.responses;
 
 import crypto.PublicParameters;
 import it.unisa.dia.gas.jpbc.Element;
-import protocol.Response;
+import network.Response;
 
 public class RetrieveGuardsResponse extends Response {
 

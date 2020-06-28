@@ -1,8 +1,8 @@
-package middleware;
+package communication;
 
-import protocol.Layer;
-import protocol.Request;
-import protocol.Response;
+import network.Layer;
+import network.Request;
+import network.Response;
 
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -13,13 +13,13 @@ import java.rmi.registry.LocateRegistry;
 /**
  * Handles node to node communication with Java RMI.
  */
-public class Middleware extends Layer {
+public class Communication extends Layer {
 
-    private MiddlewareHost host;
+    private RMIHost host;
     private final String address;
     private final int port;
 
-    public Middleware(int port) {
+    public Communication(int port) {
         this.port = port;
         String ipv4 = "";
         try {
@@ -45,14 +45,14 @@ public class Middleware extends Layer {
      * @param address address of the server in the form of IP:PORT
      * @return a remote Java RMI adapter.
      */
-    private MiddlewareService remote(String address) {
+    private RMIService remote(String address) {
         if(host == null) {
             System.err.println("[Middleware] Host does not exist.");
             return null;
         }
-        MiddlewareService remote;
+        RMIService remote;
         try {
-            remote = (MiddlewareService) Naming.lookup("//" + address + "/authentication");
+            remote = (RMIService) Naming.lookup("//" + address + "/authentication");
         } catch (Exception e) {
             System.err.println("[Middleware] Could not connect to the remote RMI server.");
             return null;
@@ -68,7 +68,7 @@ public class Middleware extends Layer {
     public boolean initializeHost(Layer overlay) {
         setOverlay(overlay);
         try {
-            host = new MiddlewareHost(overlay, address);
+            host = new RMIHost(overlay, address);
             LocateRegistry.createRegistry(port).bind("authentication", host);
         } catch (Exception e) {
             System.err.println("[Middleware] Could not bind.");
@@ -95,7 +95,7 @@ public class Middleware extends Layer {
             response = receive(request);
         } else {
             // Connect to the remote node.
-            MiddlewareService remote = remote(destinationAddress);
+            RMIService remote = remote(destinationAddress);
             if (remote == null) {
                 return null;
             }

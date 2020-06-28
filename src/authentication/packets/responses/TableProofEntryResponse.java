@@ -1,7 +1,7 @@
 package authentication.packets.responses;
 
 import crypto.memento.SignatureMemento;
-import protocol.Response;
+import network.Response;
 
 public class TableProofEntryResponse extends Response {
 

@@ -6,7 +6,8 @@ import java.security.SecureRandom;
 import java.util.*;
 
 /**
- * Represents a private pseudorandom permutation used by TTP to find guard name IDs.
+ * Represents a private pseudorandom permutation over the name ID space.
+ * Used by TTP to find guard name IDs.
  */
 public class GuardPermutation {
 
@@ -14,15 +15,15 @@ public class GuardPermutation {
 
     public GuardPermutation(int inputSpaceSize) {
         permutationMap = new HashMap<>();
-        // TODO generate a random seed..
-        String seed = "x183%-2ly1vk*3,x?1~93]I|z.#";
-        SecureRandom rand = new SecureRandom(seed.getBytes());
+        // SecureRandom seeds itself.
+        SecureRandom rand = new SecureRandom();
         List<Integer> inputSpace = new ArrayList<>(inputSpaceSize);
         List<Integer> outputSpace = new ArrayList<>(inputSpaceSize);
         for(int i = 0; i < inputSpaceSize; i++) {
             inputSpace.add(i);
             outputSpace.add(i);
         }
+        // Shuffle the outputs corresponding to each input.
         Collections.shuffle(outputSpace, rand);
         for(int i = 0; i < inputSpaceSize; i++) {
             permutationMap.put(inputSpace.get(i), outputSpace.get(i));

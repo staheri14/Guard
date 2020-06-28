@@ -1,22 +1,28 @@
-package userinterface;
+package misc;
 
 import authentication.Authentication;
 import ttp.SystemParameters;
 import ttp.TTP;
 import skipnode.SkipNode;
 
+/**
+ * Represents a local authenticated skip graph. Can be used for testing.
+ */
 public class LocalSystem {
 
+    // The ttp process of the skip graph.
     private final TTP ttp;
+    // The authenticated skip-node layers of each process.
     private final SkipNode[] nodes;
+    // The authentication layers of each process.
     private final Authentication[] authLayers;
 
     public LocalSystem(SystemParameters systemParameters, int startingPort) {
-        ttp = Constructors.createTTP(systemParameters, startingPort);
+        ttp = Builders.buildTTP(systemParameters, startingPort);
         nodes = new SkipNode[systemParameters.SYSTEM_CAPACITY];
         authLayers = new Authentication[systemParameters.SYSTEM_CAPACITY];
         for(int i = 1; i <= systemParameters.SYSTEM_CAPACITY; i++) {
-            nodes[i-1] = Constructors.createAuthNode(ttp.getAddress(), startingPort + i);
+            nodes[i-1] = Builders.buildAuthNode(ttp.getAddress(), startingPort + i);
             authLayers[i-1] = (Authentication) nodes[i-1].getUnderlay();
         }
     }
