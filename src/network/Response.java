@@ -16,6 +16,9 @@ public class Response implements Serializable {
     // processed the request.
     public final String errorMessage;
 
+    // Unique id of the response.
+    public int id;
+
     public Response(String errorMessage) {
         this.errorMessage = errorMessage;
     }

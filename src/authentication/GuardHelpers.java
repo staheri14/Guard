@@ -10,10 +10,18 @@ import java.security.SecureRandom;
 public class GuardHelpers {
 
     static MessageDigest digest = null;
-    // TODO: feed a seed
-    static SecureRandom rand = new SecureRandom();
+    public static SecureRandom rand = new SecureRandom();
 
-
+    /**
+     * Constructs a message to be signed by the neighbor of the node to be put in a table proof.
+     * Example: If node 4 is the right neighbor of node 1 at level 2, the following message is returned:
+     * "1" || "2" || "1" (right)
+     * @param ownerNumID the numerical ID of the owner of the table proof.
+     * @param relativeLevel the level of the neighbor.
+     * @param relativePosition the position of the neighbor relative to the owner of the table proof.
+     * @param parameters the system parameters required to construct the message.
+     * @return the neighbor message.
+     */
     public static String constructNeighborMessage(int ownerNumID, int relativeLevel, int relativePosition, SystemParameters parameters) {
         return toBinaryStringWithSize(ownerNumID + "" + relativePosition + "" + relativeLevel,
                 parameters.MESSAGE_LENGTH);
@@ -66,6 +74,11 @@ public class GuardHelpers {
         return sb.toString();
     }
 
+    /**
+     * Returns a random bit string with the given size. Each character is either 1 or 0.
+     * @param size size of the bit string.
+     * @return a random bit string with the given size.
+     */
     public static String randomBitString(int size) {
         StringBuilder s = new StringBuilder();
         while(s.length() < size) {

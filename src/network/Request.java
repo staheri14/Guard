@@ -13,6 +13,8 @@ public class Request implements Serializable {
     public String senderAddress;
     // The address of the client that the request is sent to.
     public String destinationAddress;
+    // Unique id of the request.
+    public int id;
 
     public Request(RequestType type) {
         this.type = type;
