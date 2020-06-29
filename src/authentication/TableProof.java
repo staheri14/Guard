@@ -6,6 +6,9 @@ import crypto.memento.SignatureMemento;
 
 import java.io.Serializable;
 
+/**
+ * Represents the table proof of a node. Can be sent accross the wire.
+ */
 public class TableProof implements Serializable {
 
     private final SignatureMemento[][] signatures;
@@ -16,6 +19,12 @@ public class TableProof implements Serializable {
         this.ownerNumID = ownerNumID;
     }
 
+    /**
+     * Inserts a table proof entry at the given level and position
+     * @param level the level.
+     * @param position the position. 0 for left, 1 for right.
+     * @param signature the signature received from the neighbor.
+     */
     public void insertProof(int level, int position, SignatureMemento signature) {
         signatures[level][position] = signature;
     }

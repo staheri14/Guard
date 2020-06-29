@@ -3,6 +3,11 @@ package authentication;
 import skipnode.LookupTable;
 import skipnode.NodeInfo;
 
+/**
+ * In Guard, the 0th level is modeled as a circular linked list, i.e. the last node and the first
+ * node are connected with each other. This lookup table overrides the default lookup table with
+ * such mechanism.
+ */
 public class CircularLookupTable extends LookupTable {
 
     private final NodeInfo circularLeftNeighbor;

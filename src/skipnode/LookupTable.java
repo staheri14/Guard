@@ -4,15 +4,24 @@ import java.io.Serializable;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Represents a thread-safe lookup table. A lookup table is used by a skip-graph node to route a lookup request
+ * to the appropriate node. It denotes the neighbors of a node at each skip-graph level.
+ */
 public class LookupTable implements Serializable {
 
     protected final NodeInfo[][] table;
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+    /**
+     * Represents the result of a `findNextHop` operation on a lookup table. Contains
+     * the necessary information that can be used to route a specific lookup request.
+     */
     public static class NextHop {
 
         public final NodeInfo node;
         public final int level;
+        // Can be 0 for left neighbor, 1 for right neighbor.
         public final int position;
 
         public NextHop(NodeInfo node, int level, int position) {
@@ -46,6 +55,12 @@ public class LookupTable implements Serializable {
         return table.length;
     }
 
+    /**
+     * Returns whether the given lookup table level & position pair is valid.
+     * @param level
+     * @param position
+     * @return true if the given level & position pair is valid.
+     */
     private boolean isInvalidPosition(int level, int position) {
         return level < 0 || level >= table.length || position > 1 || position < 0;
     }

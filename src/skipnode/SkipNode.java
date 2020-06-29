@@ -9,11 +9,21 @@ import network.Response;
 import network.Layer;
 import skipnode.packets.responses.SearchResultResponse;
 
+/**
+ * Represents a skip-graph node layer. Handles fundamental skip-graph joining and
+ * lookup operations.
+ */
 public class SkipNode extends Layer {
 
+    // The lookup table of the node. Contains the necessary routing information.
     private LookupTable lookupTable;
+    // Information about the node, e.g. numerical ID and address
     private NodeInfo info;
+    // System parameters that this node should adhere to.
     private SystemParameters systemParameters;
+    // The address of the introducer. During joining the skip-graph, the introducer is responsible
+    // with inserting this node to the already existing skip-graph. Should be set to null if this
+    // node is the first node in the skip-graph.
     private String introducerAddress;
 
     public SkipNode() {}
@@ -24,6 +34,14 @@ public class SkipNode extends Layer {
         info.setAddress(address);
     }
 
+    /**
+     * Initializes the skip-graph node with the given parameters. Used for late initialization, if the required information
+     * is not present during the consutruction of the node.
+     * @param numID numerical ID of the node.
+     * @param nameID name ID of the node.
+     * @param introducerAddress address of the introducer for this node.
+     * @param systemParameters the system parameters that this node should adhere to.
+     */
     public void initialize(int numID, String nameID, String introducerAddress, SystemParameters systemParameters) {
         lookupTable = new LookupTable(systemParameters.getNameIDLength());
         info = new NodeInfo(numID, nameID);
@@ -32,6 +50,12 @@ public class SkipNode extends Layer {
         this.introducerAddress = introducerAddress;
     }
 
+    /**
+     * Handles the requests received from the lower layer and produces and output if the request can be handled
+     * by this layer.
+     * @param request request from the lower layer.
+     * @return the emitted response. Null if the request is not recognized by this layer.
+     */
     @Override
     public Response handleReceivedRequest(Request request) {
         return switch(request.type) {
@@ -99,8 +123,16 @@ public class SkipNode extends Layer {
         return new AckResponse(null);
     }
 
+    /**
+     * Fundamental skip-graph lookup operation defined as a recursive method. Initiated by every node in the search path
+     * of a lookup operation.
+     * @param request
+     * @return the result of the lookup operation.
+     */
     public SearchResultResponse routeSearchNumID(RouteSearchNumIDRequest request) {
+        // Finds the next hop from the lookup table.
         LookupTable.NextHop nextHop = LookupTable.findNextHop(info.getNumID(), request.target, request.level, lookupTable);
+        // If this node is the target, then simply return itself as the result.
         if(nextHop == null) {
             return new SearchResultResponse(new NodeInfo(info), null);
         }
@@ -113,10 +145,20 @@ public class SkipNode extends Layer {
         return (SearchResultResponse) r;
     }
 
+    /**
+     * Initiates a lookup operation from this node.
+     * @param request contains the necessary information for initiating a numerical ID search.
+     * @return the response containing the result of the lookup
+     */
     public SearchResultResponse searchByNumID(SearchByNumIDRequest request) {
         return routeSearchNumID(new RouteSearchNumIDRequest(request.target, systemParameters.getMaxLevels()));
     }
 
+    /**
+     * Finds the `ladder`, i.e. the node that should be used to propagate a newly joined node to the upper layer.
+     * @param request the request.
+     * @return the `ladder` node information.
+     */
     public NodeInfoResponse findLadder(FindLadderRequest request) {
         // If the current node and the inserted node have common bits more than the current level,
         // then this node is the neighbor so we return it
@@ -148,6 +190,10 @@ public class SkipNode extends Layer {
         return (NodeInfoResponse) neighborResponse;
     }
 
+    /**
+     * Inserts this node into the skip graph through its introducer.
+     * @return an acknowledgement response.
+     */
     public AckResponse insert() {
         // Do not insert an already inserted node.
         if(info.isInserted()) return new AckResponse(null);

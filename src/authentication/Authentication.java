@@ -35,13 +35,19 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
+/**
+ * Represents the authentication layer. Procedures of Guard protocol are implemented at this layer.
+ */
 public class Authentication extends Layer {
 
     private final String ttpAddress;
+    // Upper layer as the skip-node.
     private SkipNode skipNode;
 
     // Maintained during insertion:
+    // 0th level left neighbor.
     private NodeInfo leftGuardNeighbor;
+    // 0th level right neighbor.
     private NodeInfo rightGuardNeighbor;
 
     // Initialized at the registration phase:
@@ -57,6 +63,8 @@ public class Authentication extends Layer {
     // Initialized at the guard assignment phase:
     private String[] guardAddresses;
     private Element[] publicDistKey;
+    // Contains the required information for this node to act as a guard.
+    // Maps the address of the guarded node to the required information.
     private final Map<String, RetrieveGuardInfoResponse> guardInformation;
 
     // We can not request more than one authentication challenge from the TTP at the same time. Thus,
@@ -93,6 +101,7 @@ public class Authentication extends Layer {
             case NODE_CONSTRUCT -> nodeConstruct();
             case NODE_ASSIGN -> nodeAssign();
             case GET_TABLE_PROOF_ENTRY -> getTableProofEntry((GetTableProofEntryRequest) request);
+            // Handle the skip-graph joining.
             case INSERT -> authInsert();
             case GET_GUARD_NEIGHBOR -> getGuardNeighbor((GetGuardNeighborRequest) request);
             case SET_GUARD_NEIGHBOR -> setGuardNeighbor((SetGuardNeighborRequest) request);
@@ -102,10 +111,20 @@ public class Authentication extends Layer {
         };
     }
 
+    /**
+     * Sends the given request to TTP.
+     * @param request request to send to TTP.
+     * @return the response emitted from TTP.
+     */
     private Response sendTTP(Request request) {
         return send(ttpAddress, request);
     }
 
+    /**
+     * Used to set the 0th level left or right neighbor of this node.
+     * @param request the request.
+     * @return acknowledgement.
+     */
     public AckResponse setGuardNeighbor(SetGuardNeighborRequest request) {
         if(request.position == 0) leftGuardNeighbor = request.neighbor;
         else if(request.position == 1) rightGuardNeighbor = request.neighbor;
@@ -113,12 +132,23 @@ public class Authentication extends Layer {
         return new AckResponse(null);
     }
 
+    /**
+     * Used to get the 0th level left or right neighbor of this node.
+     * @param request the request.
+     * @return neighbor.
+     */
     public NodeInfoResponse getGuardNeighbor(GetGuardNeighborRequest request) {
         if(request.position == 0) return new NodeInfoResponse(leftGuardNeighbor, null);
         if(request.position == 1) return new NodeInfoResponse(rightGuardNeighbor, null);
         return new NodeInfoResponse(null, "invalid position");
     }
 
+    /**
+     * This method is invoked on a guard node. The given routing transcript is partially signed with the
+     * guard keys if the transcript is valid.
+     * @param request the request.
+     * @return the partial signature of the routing transcript.
+     */
     public PartialSignatureResponse getGuardSignature(GetGuardSignatureRequest request) {
         String guardedNodeAddress = request.senderAddress;
         if(!guardInformation.containsKey(guardedNodeAddress)) {
@@ -161,6 +191,12 @@ public class Authentication extends Layer {
         return new PartialSignatureResponse(new SignatureShareMemento(sgn), null);
     }
 
+    /**
+     * Implements the initiation of an authenticated lookup operation. Makes calls on the upper layer (skip-node)
+     * to emit a response.
+     * @param request the request.
+     * @return the search result.
+     */
     public AuthSearchResultResponse authSearchByNumID(AuthSearchByNumIDRequest request) {
         // Make sure that the previous phases are complete before performing a search.
         if(signatureKey == null) {
@@ -183,42 +219,12 @@ public class Authentication extends Layer {
         return r;
     }
 
-    public boolean batchVerify(List<RoutingProof> routingProofs) {
-        VerifySignatureWorker[] workers = new VerifySignatureWorker[2 * routingProofs.size()];
-        Thread[] verifierThreads = new Thread[workers.length];
-        Iterator<RoutingProof> it = routingProofs.iterator();
-        for(int i = 0; i < workers.length && it.hasNext(); i += 2) {
-            RoutingProof proof = it.next();
-            workers[i] = new VerifySignatureWorker(proof.selfSignature, publicParameters, pairing,
-                    GuardHelpers.prependToLength(GuardHelpers.sha256(proof.transcript.R), systemParameters.IDENTITY_LENGTH),
-                    proof.transcript.toBitString(systemParameters));
-            workers[i + 1] =  new VerifySignatureWorker(proof.guardSignature, publicParameters, pairing,
-                    GuardHelpers.prependToLength(GuardHelpers.getNameIDFromNumID(proof.transcript.R, systemParameters), systemParameters.IDENTITY_LENGTH),
-                    proof.transcript.toBitString(systemParameters));
-            verifierThreads[i] = new Thread(workers[i]);
-            verifierThreads[i + 1] = new Thread(workers[i + 1]);
-        }
-        // Start the threads.
-        for (Thread verifierThread : verifierThreads) {
-            verifierThread.start();
-        }
-        // Complete the threads.
-        for (Thread verifierThread : verifierThreads) {
-            try {
-                verifierThread.join();
-            } catch (InterruptedException e) {
-                System.err.println("Error while waiting for the verifier threads to complete during batch verification");
-                e.printStackTrace();
-            }
-        }
-        // Check the results.
-        for(VerifySignatureWorker worker : workers) {
-            if(!worker.valid) return false;
-        }
-        return true;
-    }
-
-    // Check the piggybacked routing proofs & append the new proof.
+    /**
+     * Implements the authenticated recursive search operation. Checks the piggybacked routing proofs & append the new proof.
+     * Makes calls on the upper layer (skip-node) to reach a result
+     * @param request the request.
+     * @return the search result.
+     */
     public AuthSearchResultResponse authRouteSearchNumID(AuthRouteSearchNumIDRequest request) {
         boolean initiator = request.routingProofs.size() == 0;
         LookupTable.NextHop nextHop = LookupTable.findNextHop(skipNode.getInfo().getNumID(), request.target, request.level, skipNode.getLookupTable());
@@ -311,6 +317,51 @@ public class Authentication extends Layer {
         return new AuthSearchResultResponse(request.routingProofs, r.result, null);
     }
 
+
+    /**
+     * Used to verify a list of routing proofs. Usually called by the initiator after the search results are received.
+     * @param routingProofs the list of routing proofs that should be verified.
+     * @return true iff all the routing proofs are verified.
+     */
+    public boolean batchVerify(List<RoutingProof> routingProofs) {
+        VerifySignatureWorker[] workers = new VerifySignatureWorker[2 * routingProofs.size()];
+        Thread[] verifierThreads = new Thread[workers.length];
+        Iterator<RoutingProof> it = routingProofs.iterator();
+        for(int i = 0; i < workers.length && it.hasNext(); i += 2) {
+            RoutingProof proof = it.next();
+            workers[i] = new VerifySignatureWorker(proof.selfSignature, publicParameters, pairing,
+                    GuardHelpers.prependToLength(GuardHelpers.sha256(proof.transcript.R), systemParameters.IDENTITY_LENGTH),
+                    proof.transcript.toBitString(systemParameters));
+            workers[i + 1] =  new VerifySignatureWorker(proof.guardSignature, publicParameters, pairing,
+                    GuardHelpers.prependToLength(GuardHelpers.getNameIDFromNumID(proof.transcript.R, systemParameters), systemParameters.IDENTITY_LENGTH),
+                    proof.transcript.toBitString(systemParameters));
+            verifierThreads[i] = new Thread(workers[i]);
+            verifierThreads[i + 1] = new Thread(workers[i + 1]);
+        }
+        // Start the threads.
+        for (Thread verifierThread : verifierThreads) {
+            verifierThread.start();
+        }
+        // Complete the threads.
+        for (Thread verifierThread : verifierThreads) {
+            try {
+                verifierThread.join();
+            } catch (InterruptedException e) {
+                System.err.println("Error while waiting for the verifier threads to complete during batch verification");
+                e.printStackTrace();
+            }
+        }
+        // Check the results.
+        for(VerifySignatureWorker worker : workers) {
+            if(!worker.valid) return false;
+        }
+        return true;
+    }
+
+    /**
+     * The registration phase. Connects to the TTP and receives its numerical ID, name ID, and private signature key.
+     * @return the registration payload from the TTP.
+     */
     public RegistrationResponse nodeRegister() {
         Response r = sendTTP(new RegisterRequest());
         if(r.isError()) {
@@ -330,6 +381,11 @@ public class Authentication extends Layer {
         return regResponse;
     }
 
+    /**
+     * Requests a challenge from the TTP and signs it with its own private signature key acquired in the registration
+     * phase.
+     * @return the challenge solution (i.e. the signed challenge).
+     */
     public SignatureMemento authenticateWithTTP() {
         Response r = sendTTP(new AuthChallengeRequest());
         if(r.isError()) {
@@ -340,6 +396,10 @@ public class Authentication extends Layer {
         return new SignatureMemento(sgn);
     }
 
+    /**
+     * Extends the skip-graph joining by maintaining the 0th level left and right neighbors.
+     * @return acknowledgement.
+     */
     public AckResponse authInsert() {
         // Perform its own insertion. The nodes' lookup table is built.
         AckResponse s = skipNode.insert();
@@ -348,8 +408,8 @@ public class Authentication extends Layer {
         }
         LookupTable lookupTable = skipNode.getLookupTable();
         // We need to handle the 0th level since it needs to be circular for Guard to work.
-        String newLeftAddr = null;
-        String newRightAddr = null;
+        String newLeftAddr;
+        String newRightAddr;
         // Get the zero level neighbors.
         NodeInfo zeroLeft = lookupTable.getNeighbor(0, 0);
         NodeInfo zeroRight = lookupTable.getNeighbor(0, 1);
@@ -398,6 +458,12 @@ public class Authentication extends Layer {
         return new AckResponse(null);
     }
 
+    /**
+     * Called on a neighbor by a node constructing its table proof. The appropriate table proof entry is sent back
+     * iff the neighbor is valid.
+     * @param request the request.
+     * @return the table proof entry.
+     */
     public TableProofEntryResponse getTableProofEntry(GetTableProofEntryRequest request) {
         if(circularLookupTable == null) {
             circularLookupTable = new CircularLookupTable(skipNode.getLookupTable(), leftGuardNeighbor, rightGuardNeighbor);
@@ -406,13 +472,17 @@ public class Authentication extends Layer {
         if(claimedNeighbor == null || claimedNeighbor.invalid || claimedNeighbor.getNumID() != request.requesterNumID) {
             return new TableProofEntryResponse(null, "Authentication.getTableProofEntry: invalid neighbor");
         }
-        String message = GuardHelpers.toBinaryStringWithSize(request.requesterNumID + "" + request.relativePosition + "" + request.neighborLevel,
-                systemParameters.MESSAGE_LENGTH);
+        String message = GuardHelpers.constructNeighborMessage(request.requesterNumID, request.neighborLevel, request.relativePosition, systemParameters);
         // Create the signature.
         Signature signature = Scheme.SignGlobal(message, signatureKey, publicParameters);
         return new TableProofEntryResponse(new SignatureMemento(signature), null);
     }
 
+    /**
+     * Implementation of the construction phase. The node constructs its table proof by communicating with its
+     * neighbors at each level.
+     * @return acknowledgement response.
+     */
     public AckResponse nodeConstruct() {
         if(circularLookupTable == null) {
             circularLookupTable = new CircularLookupTable(skipNode.getLookupTable(), leftGuardNeighbor, rightGuardNeighbor);
@@ -434,6 +504,11 @@ public class Authentication extends Layer {
         return new AckResponse(null);
     }
 
+    /**
+     * Implementation of the guard assignment phase. Receives its guards from the TTP and informs the guards about
+     * their new responsibility.
+     * @return acknowledgement response.
+     */
     public AckResponse nodeAssign() {
         authenticationLock.lock();
         SignatureMemento challengeSolution = authenticateWithTTP();
@@ -464,6 +539,12 @@ public class Authentication extends Layer {
         return new AckResponse(null);
     }
 
+    /**
+     * Called on a guard to inform its new responsibility of a node. The caller node is a node that this
+     * node is a guard of. This node receives the necessary information to guard the caller node from TTP.
+     * @param request the request.
+     * @return acknowledgement.
+     */
     public AckResponse informGuard(InformGuardRequest request) {
         authenticationLock.lock();
         // Authenticate with the TTP.
@@ -473,7 +554,6 @@ public class Authentication extends Layer {
         }
         Response r = sendTTP(new RetrieveGuardKeysRequest(challengeSolution, request.senderAddress, request.guardIndex));
         authenticationLock.unlock();
-
         if(r.isError()) {
             return new AckResponse(r.errorMessage);
         }

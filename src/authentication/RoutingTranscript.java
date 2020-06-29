@@ -4,6 +4,9 @@ import ttp.SystemParameters;
 
 import java.io.Serializable;
 
+/**
+ * Represents a routing
+ */
 public class RoutingTranscript implements Serializable {
 
     // NumID of the routing node.

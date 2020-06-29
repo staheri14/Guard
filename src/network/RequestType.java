@@ -1,5 +1,8 @@
 package network;
 
+/**
+ * Represents the possible types of a request.
+ */
 public enum RequestType {
     // Handled by PingHandler (for testing):
     PING,

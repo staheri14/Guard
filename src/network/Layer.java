@@ -1,8 +1,13 @@
 package network;
 
+/**
+ * Represents a network layer.
+ */
 public abstract class Layer {
 
+    // The upper layer. Should be null if the layer is the uppermost layer.
     protected Layer overlay;
+    // The lower layer. Should be null if the layer is the lowermost layer.
     protected Layer underlay;
 
     public Layer getUnderlay() {

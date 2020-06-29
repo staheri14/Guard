@@ -1,11 +1,17 @@
 package skipnode;
 import java.io.Serializable;
 
+/**
+ * Contains the fundamental information about a skip-graph node.
+ */
 public class NodeInfo implements Serializable {
 
 	private String address;
 	private final int numID;
 	private final String nameID;
+	// Whether the node is invalid or not. An invalid node is simply a placeholder in the
+	// lookup table of an actual node. It means that the actual node does not have a such
+	// neighbor.
 	public final boolean invalid;
 
 	// Whether this node is inserted or not.
