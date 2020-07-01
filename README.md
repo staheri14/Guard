@@ -35,12 +35,38 @@ The parameters related to the experiment is also defined in the `SystemParameter
 1. **ROUND_COUNT:** Denotes how many rounds a single node needs to complete.
 2. **WAIT_TIME:** In order to avoid congestion, the nodes wait before proceeding to the next round. The waiting time (in seconds) is chosen uniformly from [0, `WAIT_TIME`].
 ## Running
-To run Guard, 
+This implementation of Guard requires Java 11 to run. Please install the appropriate JRE before running. 
 
+To run Guard, go to the `out` directory where the `Guard.jar` can be found. This executable can be run in two different modes: (1) TTP mode, and (2) node mode.
+Each system needs to have one TTP and `SYSTEM_CAPACITY` many nodes. To run as TTP, do the following:
+```bash
+$ java -jar Guard.jar ttp <port>
+```
+where `<port>` corresponds to the port number that the TTP should run on.
+
+
+To run as a node, do the following:
+```bash
+$ java -jar Guard.jar node <port> <TTP address>
+```
+where `<port>` corresponds to the port number that the node should run on, and `<TTP address>` corresponds to the address of the TTP. Making use of this address,
+the node registers itself with the TTP (at the registration phase) and acquires its guards (at the guard assignment phase.)  
 
 
 ## Node operations
+Once you run the application in `node` mode, the node will automatically register with the TTP and insert itself into the skip graph. The introducer is acquired from the TTP during registration. After these are complete, you will have the following options:
+1. **Info:** Reports the information about the node (e.g. numerical ID) that was acquired from the TTP.
+2. **Initialize:** Runs the construction phase (constructs the table proof) and guard assignment phase (acquires the guards) for this node.
+3. **Search:** Initiates a search from this node.
+4. **Start experiments:** Starts running the experiments only from this node. In other words, this node will perform `ROUND_COUNT` many *round*s.
 
 ## TTP operations
+1. **Show registered nodes:** Shows the list of registered nodes.
+2. **Broadcast initialize requests:** Initializes every registered node (i.e. runs the construction and guard assignment phases) and makes the skip-graph ready for authenticated searches.
+3. **Start experiments:** Runs the experiments. Each node will perform `ROUND_COUNT` many *round*s to complete the experiment.
+4. **Terminate the skip-graph:** Terminates the TTP and remotely terminates every registered node in the skip-graph.
+
+After all the nodes are registered with the TTP, the whole experiment can be controlled through TTP.
+In order to take measurements, the operations need to be performed with respect to their numerical order (i.e. first 2, then 3, and finally 4.) 
 
 ## Taking measurements
