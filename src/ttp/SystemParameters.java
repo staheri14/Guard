@@ -31,7 +31,6 @@ public class SystemParameters implements Serializable {
     // Whether the routing proof of each node should be verified by the subsequent
     // node at the search path.
     public final boolean VERIFY_AT_ROUTER;
-    public final boolean DIRECT_ROUTE_BACK = true;
 
     public SystemParameters(int systemCapacity, boolean verifyAtInitiator, boolean verifyAtRouter) {
         SYSTEM_CAPACITY = systemCapacity;
