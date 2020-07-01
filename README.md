@@ -82,4 +82,6 @@ A single log has the following fields:
 
 ## Taking measurements
 The logs emitted by every node is located at the `out/logs` directory in `csv` format. If the nodes are executed in different machines, the files need to be collected from
-every machine to a central location. Then, we can make use of the provided Python scripts to take measurements
+every machine to a central location. We recommend using `scp`.
+ 
+After every log file is collected at a single location, we can make use of the provided Python scripts to take measurements
