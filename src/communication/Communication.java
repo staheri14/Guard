@@ -100,11 +100,12 @@ public class Communication extends Layer {
         // If the destination address is this node, simply send the request back up.
         if(destinationAddress.equals(fullAddress)) {
             response = receive(request);
-            // Fill in the response fields.
+            // Fill in the response fields that was handled locally.
             response.destinationAddress = fullAddress;
             response.sourceAddress = fullAddress;
             response.auth = request.auth;
             response.phase = request.phase;
+            response.id = Integer.toUnsignedLong(GlobalRand.rand.nextInt());
         } else {
             // Connect to the remote node.
             RMIService remote = remote(destinationAddress);

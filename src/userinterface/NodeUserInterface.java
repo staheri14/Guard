@@ -23,6 +23,8 @@ import java.util.Scanner;
 public class NodeUserInterface extends UserInterface {
 
     private final SkipNode authNode;
+    // This flag is set to true when the experiment controller (i.e. TTP) remotely terminates the node.
+    private boolean terminated = false;
 
     public NodeUserInterface(Scanner scanner, SkipNode authNode) {
         super(scanner);
@@ -59,8 +61,11 @@ public class NodeUserInterface extends UserInterface {
 
     @Override
     public boolean handleUserInput(int input) {
+        // If the node is terminated, do not wait handle the input, simply close the application.
+        if(terminated) return false;
+        // Terminate the node.
         switch (input) {
-            case 1: {
+            case 1 -> {
                 // Send node info request to this node.
                 Response r = send(getAddress(), new GetInfoRequest());
                 if (r.isError()) {
@@ -69,27 +74,29 @@ public class NodeUserInterface extends UserInterface {
                     // Output the received response.
                     System.out.println(((NodeInfoResponse) r).nodeInfo);
                 }
-                break;
             }
-            case 2: {
+            case 2 -> {
                 initializeGuard();
-                break;
             }
-            case 3: {
+            case 3 -> {
+                // Ask for the target num ID.
                 int target = promptInteger("Enter target numerical ID");
+                // Ask whether the search should be performed in an authenticated manner.
                 boolean auth = promptBoolean("Authenticated");
+                // Send the appropriate request.
                 search(new SearchRequest(target, auth));
-                break;
             }
-            case 4: {
+            case 4 -> {
+                // Acquire the system parameters.
                 SystemParameters systemParameters = authNode.getSystemParameters();
+                // Run the experiment.
                 experiment(new ExperimentRequest(systemParameters.ROUND_COUNT, systemParameters.WAIT_TIME,
                         0, systemParameters.SYSTEM_CAPACITY));
             }
-            break;
-            case 5:
+            case 5 -> {
                 terminateNode();
                 return false;
+            }
         }
         return true;
     }
@@ -184,11 +191,13 @@ public class NodeUserInterface extends UserInterface {
     }
 
     public AckResponse terminateNode() {
-        System.out.println("Requested termination...");
+        System.out.println("Requested remote termination...");
         // Close the logger.
         logger.close();
         // Terminate the layers.
         terminate();
+        terminated = true;
+        System.out.println("Termination complete. Please close the application by giving an input.");
         return new AckResponse(null);
     }
 }

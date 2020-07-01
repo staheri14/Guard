@@ -114,6 +114,10 @@ public class Logger {
         address = null;
     }
 
+    /**
+     * Logs a request sent event.
+     * @param request the request that is being sent.
+     */
     public void logRequestSent(Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_request";
@@ -122,6 +126,10 @@ public class Logger {
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
 
+    /**
+     * Logs a request received event.
+     * @param request the request that was received.
+     */
     public void logRequestReceived(Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_request";
@@ -130,6 +138,11 @@ public class Logger {
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
 
+    /**
+     * Logs a response sent event.
+     * @param response the response that was produced.
+     * @param request the request that lead to the production of the response.
+     */
     public void logResponseSent(Response response, Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_response";
@@ -138,6 +151,11 @@ public class Logger {
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
 
+    /**
+     * Logs a response received event.
+     * @param response the response that was produced.
+     * @param request the request that lead to the production of the response.
+     */
     public void logResponseReceived(Response response, Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_response";
@@ -147,8 +165,9 @@ public class Logger {
     }
 
     /**
-     * Maps a local event type to its mode and phase. During the logging of local events, modes and phases
-     * will not need to be provided.
+     * Maps a local event type to its mode and phase. Each local event must be registered through this method before
+     * calling `logProcessStart` or `logProcessEnd`. During the logging of local events, modes and phases will not
+     * need to be provided.
      * @param type the new event type.
      * @param mode the mode corresponding to the event.
      * @param phase the phase corresponding to the event.
@@ -159,9 +178,15 @@ public class Logger {
         typeModes.put(type, mode);
     }
 
-    public int logProcessStart(String type) {
+    /**
+     * Logs the beginning of a local event. The event must be registered through `registerLocalEvent` before calling
+     * this method.
+     * @param type the started event type.
+     * @return the assigned process ID.
+     */
+    public long logProcessStart(String type) {
         if(invalid) return -1;
-        int processID = GlobalRand.rand.nextInt();
+        long processID = Integer.toUnsignedLong(GlobalRand.rand.nextInt());
         String messageType =  type + "_start";
         Phase phase = typePhases.get(type);
         Mode mode = typeModes.get(type);
@@ -173,7 +198,13 @@ public class Logger {
         return processID;
     }
 
-    public void logProcessEnd(String type, int processID) {
+    /**
+     * Logs the end of a local event. The event must be registered through `registerLocalEvent` and a process ID must
+     * be acquired by calling `logProcessStart` before calling this method.
+     * @param type the completed event type.
+     * @param processID the process id. acquired from the corresponding `logProcessStart` call.
+     */
+    public void logProcessEnd(String type, long processID) {
         if(invalid) return;
         String messageType =  type + "_end";
         Phase phase = typePhases.get(type);
@@ -203,6 +234,10 @@ public class Logger {
         }
     }
 
+    /**
+     * Closes the logger. The buffer is flushed at this method, thus this method must be called before terminating
+     * an application.
+     */
     public void close() {
         if(invalid) return;
         try {

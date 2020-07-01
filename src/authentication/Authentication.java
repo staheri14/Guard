@@ -13,6 +13,7 @@ import authentication.packets.responses.*;
 import authentication.workers.GuardSignWorker;
 import authentication.workers.SignWorker;
 import authentication.workers.VerifySignatureWorker;
+import misc.Logger;
 import ttp.SystemParameters;
 import ttp.packets.requests.*;
 import ttp.packets.responses.*;
@@ -77,6 +78,18 @@ public class Authentication extends Layer {
         rightGuardNeighbor = new NodeInfo();
         guardInformation = new HashMap<>();
         authenticationLock = new ReentrantLock();
+    }
+
+    @Override
+    public void setLogger(Logger logger) {
+        super.setLogger(logger);
+        // Register the local events with the logger.
+        logger.registerLocalEvent("register", Logger.Mode.AUTH, Logger.Phase.REGISTRATION);
+        logger.registerLocalEvent("construct", Logger.Mode.AUTH, Logger.Phase.CONSTRUCTION);
+        logger.registerLocalEvent("guard_assign", Logger.Mode.AUTH, Logger.Phase.GUARD_ASSIGNMENT);
+        logger.registerLocalEvent("auth_search", Logger.Mode.AUTH, Logger.Phase.SEARCH);
+        logger.registerLocalEvent("auth_route_search", Logger.Mode.AUTH, Logger.Phase.SEARCH);
+        logger.registerLocalEvent("batch_verify", Logger.Mode.AUTH, Logger.Phase.SEARCH);
     }
 
     @Override
@@ -198,12 +211,16 @@ public class Authentication extends Layer {
      * @return the search result.
      */
     public AuthSearchResultResponse authSearchByNumID(AuthSearchByNumIDRequest request) {
+        long pID = logger.logProcessStart("auth_search");
         // Make sure that the previous phases are complete before performing a search.
         if(signatureKey == null) {
+            logger.logProcessEnd("auth_search", pID);
             return new AuthSearchResultResponse(null, null, "Authentication.authSearchByNumID: not registered yet");
         } else if(tableProof == null) {
+            logger.logProcessEnd("auth_search", pID);
             return new AuthSearchResultResponse(null, null, "Authentication.authSearchByNumID: not constructed yet");
         } else if(guardAddresses == null) {
+            logger.logProcessEnd("auth_search", pID);
             return new AuthSearchResultResponse(null, null, "Authentication.authSearchByNumID: not assigned yet");
         }
         // Create the random nonce.
@@ -211,11 +228,14 @@ public class Authentication extends Layer {
         AuthSearchResultResponse r = authRouteSearchNumID(new AuthRouteSearchNumIDRequest(new LinkedList<>(), request.target,
                 systemParameters.getMaxLevels(), nonce));
         if(r.isError()) {
+            logger.logProcessEnd("auth_search", pID);
             return new AuthSearchResultResponse(r.routingProofs, null, r.errorMessage);
         } else if(systemParameters.VERIFY_AT_INITIATOR && !batchVerify(r.routingProofs)) {
             // If the proofs should be verified at the initiator, do so.
+            logger.logProcessEnd("auth_search", pID);
             return new AuthSearchResultResponse(r.routingProofs, null, "Authentication.authSearchByNumID: could not verify the search path at the initator");
         }
+        logger.logProcessEnd("auth_search", pID);
         return r;
     }
 
@@ -226,6 +246,7 @@ public class Authentication extends Layer {
      * @return the search result.
      */
     public AuthSearchResultResponse authRouteSearchNumID(AuthRouteSearchNumIDRequest request) {
+        long pID = logger.logProcessStart("auth_route_search");
         boolean initiator = request.routingProofs.size() == 0;
         LookupTable.NextHop nextHop = LookupTable.findNextHop(skipNode.getInfo().getNumID(), request.target, request.level, skipNode.getLookupTable());
         // Construct the transcript accordingly depending on whether we are the initiator/search result or not.
@@ -284,11 +305,13 @@ public class Authentication extends Layer {
             e.printStackTrace();
         }
         if(shouldVerify && (!proofSelfSignatureVerifier.valid || !proofGuardSignatureVerifier.valid)) {
+            logger.logProcessEnd("auth_route_search", pID);
             return new AuthSearchResultResponse(request.routingProofs, null, "Authentication.authRouteSearchNumID: could not verify the previous proof");
         }
         // Check if guard signatures were successfully received.
         for(int i = 0; i < 3; i++) {
             if(guardSignWorkers[i].errorMsg != null) {
+                logger.logProcessEnd("auth_route_search", pID);
                 return new AuthSearchResultResponse(request.routingProofs, null, guardSignWorkers[i].errorMsg);
             }
         }
@@ -301,6 +324,7 @@ public class Authentication extends Layer {
         // Reconstruct the guard signature from the partial signatures.
         Signature guardSignature = ThresholdScheme.Reconstruct(new int[] { 1, 2, 3 }, signatureShares, publicDistKey, publicParameters);
         if(guardSignature == null) {
+            logger.logProcessEnd("auth_route_search", pID);
             return new AuthSearchResultResponse(request.routingProofs, null, "Authentication.authRouteSearchNumID: could not reconstruct the guard signature");
         }
         // Construct the routing proof.
@@ -310,10 +334,13 @@ public class Authentication extends Layer {
         // Let the skip node layer handle the request.
         SearchResultResponse r = skipNode.routeSearchNumID(request);
         if(r.isError()) {
+            logger.logProcessEnd("auth_route_search", pID);
             return new AuthSearchResultResponse(null, null, r.errorMessage);
         } else if(r instanceof AuthSearchResultResponse) {
+            logger.logProcessEnd("auth_route_search", pID);
             return (AuthSearchResultResponse) r;
         }
+        logger.logProcessEnd("auth_route_search", pID);
         return new AuthSearchResultResponse(request.routingProofs, r.result, null);
     }
 
@@ -324,9 +351,12 @@ public class Authentication extends Layer {
      * @return true iff all the routing proofs are verified.
      */
     public boolean batchVerify(List<RoutingProof> routingProofs) {
+        long pID = logger.logProcessStart("batch_verify");
+        // Reserve the space for workers & threads.
         VerifySignatureWorker[] workers = new VerifySignatureWorker[2 * routingProofs.size()];
         Thread[] verifierThreads = new Thread[workers.length];
         Iterator<RoutingProof> it = routingProofs.iterator();
+        // Create the verifier threads for every routing proof.
         for(int i = 0; i < workers.length && it.hasNext(); i += 2) {
             RoutingProof proof = it.next();
             workers[i] = new VerifySignatureWorker(proof.selfSignature, publicParameters, pairing,
@@ -351,11 +381,16 @@ public class Authentication extends Layer {
                 e.printStackTrace();
             }
         }
+        boolean allVerified = true;
         // Check the results.
         for(VerifySignatureWorker worker : workers) {
-            if(!worker.valid) return false;
+            if(!worker.valid) {
+                allVerified = false;
+                break;
+            }
         }
-        return true;
+        logger.logProcessEnd("batch_verify", pID);
+        return allVerified;
     }
 
     /**
@@ -363,12 +398,15 @@ public class Authentication extends Layer {
      * @return the registration payload from the TTP.
      */
     public RegistrationResponse nodeRegister() {
+        long pID = logger.logProcessStart("register");
         Response r = sendTTP(new RegisterRequest());
         if(r.isError()) {
+            logger.logProcessEnd("register", pID);
             return new RegistrationResponse(r.errorMessage);
         }
         RegistrationResponse regResponse = (RegistrationResponse) r;
         if(regResponse.publicParametersMemento == null || regResponse.assignedPrivateKeyMemento == null || regResponse.systemParameters == null) {
+            logger.logProcessEnd("register", pID);
             return new RegistrationResponse("Authentication.nodeRegister: malformed registration response");
         }
         // Initializes the lower layer.
@@ -378,6 +416,7 @@ public class Authentication extends Layer {
         publicParameters = regResponse.publicParametersMemento.reconstruct();
         pairing = regResponse.publicParametersMemento.reconstructPairing();
         signatureKey = regResponse.assignedPrivateKeyMemento.reconstruct(publicParameters);
+        logger.logProcessEnd("register", pID);
         return regResponse;
     }
 
@@ -484,6 +523,7 @@ public class Authentication extends Layer {
      * @return acknowledgement response.
      */
     public AckResponse nodeConstruct() {
+        long pID = logger.logProcessStart("construct");
         if(circularLookupTable == null) {
             circularLookupTable = new CircularLookupTable(skipNode.getLookupTable(), leftGuardNeighbor, rightGuardNeighbor);
         }
@@ -495,12 +535,14 @@ public class Authentication extends Layer {
                 if(neighbor.invalid) continue;
                 Response r = send(neighbor.getAddress(), new GetTableProofEntryRequest(skipNode.getInfo().getNumID(), i, j));
                 if(r.isError()) {
+                    logger.logProcessEnd("construct", pID);
                     return new AckResponse(r.errorMessage);
                 }
                 tableProof.insertProof(i, j, ((TableProofEntryResponse) r).signature);
             }
         }
         // Success.
+        logger.logProcessEnd("construct", pID);
         return new AckResponse(null);
     }
 
@@ -510,9 +552,11 @@ public class Authentication extends Layer {
      * @return acknowledgement response.
      */
     public AckResponse nodeAssign() {
+        long pID = logger.logProcessStart("guard_assign");
         authenticationLock.lock();
         SignatureMemento challengeSolution = authenticateWithTTP();
         if(challengeSolution == null) {
+            logger.logProcessEnd("guard_assign", pID);
             return new AckResponse("Authentication.nodeAssign: could not authenticate with ttp");
         }
         // Retrieve the guards of this node from the TTP.
@@ -520,6 +564,7 @@ public class Authentication extends Layer {
         Response r = sendTTP(new RetrieveGuardsRequest(challengeSolution, tableProof, circularLookupTable));
         authenticationLock.unlock();
         if(r.isError()) {
+            logger.logProcessEnd("guard_assign", pID);
             return new AckResponse(r.errorMessage);
         }
         RetrieveGuardsResponse guardResponse = (RetrieveGuardsResponse) r;
@@ -533,9 +578,11 @@ public class Authentication extends Layer {
         for(int i = 0; i < 3; i++) {
             r = send(guardAddresses[i], new InformGuardRequest(i));
             if(r.isError()) {
+                logger.logProcessEnd("guard_assign", pID);
                 return new AckResponse(r.errorMessage);
             }
         }
+        logger.logProcessEnd("guard_assign", pID);
         return new AckResponse(null);
     }
 

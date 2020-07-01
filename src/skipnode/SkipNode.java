@@ -1,5 +1,6 @@
 package skipnode;
 
+import misc.Logger;
 import ttp.SystemParameters;
 import skipnode.packets.requests.*;
 import network.packets.responses.AckResponse;
@@ -70,6 +71,13 @@ public class SkipNode extends Layer {
             case SEARCH_BY_NUM_ID -> searchByNumID((SearchByNumIDRequest) request);
             default -> null;
         };
+    }
+
+    @Override
+    public void setLogger(Logger logger) {
+        super.setLogger(logger);
+        // Register the local events with the logger.
+        logger.registerLocalEvent("unauth_search", Logger.Mode.UNAUTH, Logger.Phase.SEARCH);
     }
 
     public SystemParameters getSystemParameters() {
@@ -151,7 +159,10 @@ public class SkipNode extends Layer {
      * @return the response containing the result of the lookup
      */
     public SearchResultResponse searchByNumID(SearchByNumIDRequest request) {
-        return routeSearchNumID(new RouteSearchNumIDRequest(request.target, systemParameters.getMaxLevels()));
+        long pID = logger.logProcessStart("unauth_search");
+        SearchResultResponse r = routeSearchNumID(new RouteSearchNumIDRequest(request.target, systemParameters.getMaxLevels()));
+        logger.logProcessEnd("unauth_search", pID);
+        return r;
     }
 
     /**
