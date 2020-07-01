@@ -1,5 +1,5 @@
 # Guard
-Guard is a secure routing protocol for skip-graphs. It makes use of digital signature schemes and supervisor nodes called *guards* to assert the correctness during the lookup operations.
+Guard is a secure routing protocol for skip-graphs. It makes use of digital signature schemes and supervisor nodes called *guards* to assert the correctness of lookup operations.
 This particular implementation makes use of [jPBC library](http://gas.dia.unisa.it/projects/jpbc/) and a heavily modified version of the open-source SkipGraph implementation provided [here](https://github.com/yhassanzadeh13/SkipGraphNode).
 ## Layers
 This implementation makes use of a layered architecture. From bottom to top, the layers for an authenticated node are as following:
@@ -69,4 +69,17 @@ Once you run the application in `node` mode, the node will automatically registe
 After all the nodes are registered with the TTP, the whole experiment can be controlled through TTP.
 In order to take measurements, the operations need to be performed with respect to their numerical order (i.e. first 2, then 3, and finally 4.) 
 
+## Logs
+During the operations of Guard, we log every event that has happened at a node. The logs are saved as a `csv` file with the address of the node as the name of the file.
+A single log has the following fields:
+1. **msg_id:** The unique ID of the transmitted message or the unique ID of the local event.
+2. **event:** Can be **sent**, **received** (for message transmission events) or **process** for local events.
+3. **address:** The address of the node that the log is emitted from.
+4. **phase:** The phase in which the event has occurred. Can be **registration**, **construction**, **guard_assignment** or **search**. For events that do not particularly belong to a phase, this is set to **unknown**.
+5. **type:** This denotes the type of the event, i.e. an explanation on what the event actually is about. For example, for a **sent** event, this field contains the name of the request/response that was sent.
+6. **msg_size:** The size of the transmitted message for the **sent** or **received** events.
+7. **time:** The local time of the machine in milliseconds when the log was emitted.
+
 ## Taking measurements
+The logs emitted by every node is located at the `out/logs` directory in `csv` format. If the nodes are executed in different machines, the files need to be collected from
+every machine to a central location. Then, we can make use of the provided Python scripts to take measurements
