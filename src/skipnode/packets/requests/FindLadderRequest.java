@@ -1,5 +1,6 @@
 package skipnode.packets.requests;
 
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 
@@ -14,5 +15,6 @@ public class FindLadderRequest extends Request {
         this.level = level;
         this.direction = direction;
         this.target = target;
+        this.phase = Logger.Phase.CONSTRUCTION;
     }
 }

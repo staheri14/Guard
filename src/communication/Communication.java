@@ -1,5 +1,7 @@
 package communication;
 
+import misc.GlobalRand;
+import misc.Logger;
 import network.Layer;
 import network.Request;
 import network.Response;
@@ -16,7 +18,7 @@ import java.rmi.registry.LocateRegistry;
 public class Communication extends Layer {
 
     private RMIHost host;
-    private final String address;
+    private final String fullAddress;
     private final int port;
 
     public Communication(int port) {
@@ -25,53 +27,53 @@ public class Communication extends Layer {
         try {
             ipv4 = Inet4Address.getLocalHost().getHostAddress();
         } catch(UnknownHostException e) {
-            System.err.println("[Middleware] Could not acquire the local host name during construction.");
+            System.err.println("[Communication] Could not acquire the local host name during construction.");
             e.printStackTrace();
         }
-        address = ipv4 + ":" + port;
+        fullAddress = ipv4 + ":" + port;
     }
 
     /**
-     * Returns the address of the middleware.
-     * @return the address of the middleware.
+     * Returns the address of the comm. layer.
+     * @return the address of the comm. layer.
      */
     @Override
     public String getAddress() {
-        return address;
+        return fullAddress;
     }
 
     /**
-     * Connects to the Middleware of a remote server.
+     * Connects to the Communication of a remote server.
      * @param address address of the server in the form of IP:PORT
      * @return a remote Java RMI adapter.
      */
     private RMIService remote(String address) {
         if(host == null) {
-            System.err.println("[Middleware] Host does not exist.");
+            System.err.println("[Communication] Host does not exist.");
             return null;
         }
         RMIService remote;
         try {
-            remote = (RMIService) Naming.lookup("//" + address + "/authentication");
+            remote = (RMIService) Naming.lookup("//" + address + "/node");
         } catch (Exception e) {
-            System.err.println("[Middleware] Could not connect to the remote RMI server.");
+            System.err.println("[Communication] Could not connect to the remote RMI server.");
             return null;
         }
         return remote;
     }
 
     /**
-     * Initializes the middleware at the given port, and sets the overlay of the middleware.
-     * @param overlay the overlay of this middleware.
+     * Initializes the comm. layer at the given port, and sets the overlay of the comm. layer.
+     * @param overlay the overlay of this comm. layer.
      * @return whether the initialization was successful or not.
      */
     public boolean initializeHost(Layer overlay) {
         setOverlay(overlay);
         try {
-            host = new RMIHost(overlay, address);
-            LocateRegistry.createRegistry(port).bind("authentication", host);
+            host = new RMIHost(overlay, fullAddress);
+            LocateRegistry.createRegistry(port).bind("node", host);
         } catch (Exception e) {
-            System.err.println("[Middleware] Could not bind.");
+            System.err.println("[Communication] Could not bind.");
             e.printStackTrace();
             return false;
         }
@@ -87,12 +89,22 @@ public class Communication extends Layer {
     @Override
     public Response handleSentRequest(String destinationAddress, Request request) {
         // Set the request's address fields.
-        request.senderAddress = address;
+        request.sourceAddress = fullAddress;
         request.destinationAddress = destinationAddress;
+        // Assign a random ID for the request.
+        request.id = Integer.toUnsignedLong(GlobalRand.rand.nextInt());
+        // Log the sending of request event.
+        logger.logRequestSent(request);
+        // Reserve the space for the response.
         Response response;
         // If the destination address is this node, simply send the request back up.
-        if(destinationAddress.equals(address)) {
+        if(destinationAddress.equals(fullAddress)) {
             response = receive(request);
+            // Fill in the response fields.
+            response.destinationAddress = fullAddress;
+            response.sourceAddress = fullAddress;
+            response.auth = request.auth;
+            response.phase = request.phase;
         } else {
             // Connect to the remote node.
             RMIService remote = remote(destinationAddress);
@@ -102,14 +114,16 @@ public class Communication extends Layer {
             try {
                 response = remote.sendRequest(request);
             } catch (RemoteException e) {
-                System.err.println("[Middleware] Could not send the request.");
+                System.err.println("[Communication] Could not send the request.");
                 e.printStackTrace();
                 return null;
             }
         }
+        // Log the receipt of response event.
+        logger.logResponseReceived(response, request);
         // Error check.
         if(response.isError()) {
-            System.err.println("[Middleware] " + address + " has received: " + response.errorMessage);
+            System.err.println("[Communication] " + fullAddress + " has received: " + response.errorMessage);
         }
         // Return the response.
         return response;
@@ -117,20 +131,28 @@ public class Communication extends Layer {
 
     @Override
     public Response handleReceivedRequest(Request request) {
-        // Middleware does not receive requests from the lower layer, since it is the lowermost layer.
+        // Communication layer does not receive requests from the lower layer, since it is the lowermost layer.
         return null;
     }
 
     @Override
+    public void setLogger(Logger logger) {
+        super.setLogger(logger);
+        host.setLogger(logger);
+    }
+
+    @Override
     public boolean terminateLayer() {
+        // Try to terminate the parent layer.
+        if(!super.terminateLayer()) return false;
+        // Terminate the communication layer.
         try {
-            Naming.unbind("//" + address + "/authentication");
+            LocateRegistry.getRegistry(port).unbind("node");
         } catch (Exception e) {
-            System.err.println("[Middleware] Could not terminate.");
+            System.err.println("[Communication] Could not terminate.");
             e.printStackTrace();
             return false;
         }
         return true;
     }
-
 }

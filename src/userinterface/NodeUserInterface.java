@@ -1,10 +1,10 @@
 package userinterface;
 
-import authentication.GuardHelpers;
 import authentication.packets.requests.AuthSearchByNumIDRequest;
 import authentication.packets.requests.NodeAssignRequest;
 import authentication.packets.requests.NodeConstructRequest;
 import authentication.packets.requests.NodeRegisterRequest;
+import misc.GlobalRand;
 import network.Request;
 import network.Response;
 import network.packets.responses.AckResponse;
@@ -37,6 +37,7 @@ public class NodeUserInterface extends UserInterface {
             case SEARCH -> search((SearchRequest) request);
             case INITIALIZE -> initializeGuard();
             case EXPERIMENT -> experiment((ExperimentRequest) request);
+            case TERMINATE -> terminateNode();
             default -> null;
         };
     }
@@ -87,6 +88,7 @@ public class NodeUserInterface extends UserInterface {
             }
             break;
             case 5:
+                terminateNode();
                 return false;
         }
         return true;
@@ -116,7 +118,7 @@ public class NodeUserInterface extends UserInterface {
         for(int i = 0; i < request.rounds; i++) {
             System.out.println("** Experiment round: " + (i + 1) + "/" + request.rounds);
             // Find a random target.
-            int target = request.minNumID + GuardHelpers.rand.nextInt(request.minNumID + request.maxNumID);
+            int target = request.minNumID + GlobalRand.rand.nextInt(request.minNumID + request.maxNumID);
             // Perform an unauthenticated search on the target.
             SearchResultResponse unauthResult = search(new SearchRequest(target, false));
             if(unauthResult.isError()) {
@@ -137,7 +139,7 @@ public class NodeUserInterface extends UserInterface {
             }
             if(request.maxWaitTime == 0) continue;
             // Choose a random wait time.
-            int waitTime = GuardHelpers.rand.nextInt(request.maxWaitTime);
+            int waitTime = GlobalRand.rand.nextInt(request.maxWaitTime);
             try {
                 Thread.sleep(waitTime * 1000);
             } catch (InterruptedException e) {
@@ -179,5 +181,14 @@ public class NodeUserInterface extends UserInterface {
         SearchResultResponse resResponse = (SearchResultResponse) r;
         System.out.println(resResponse);
         return resResponse;
+    }
+
+    public AckResponse terminateNode() {
+        System.out.println("Requested termination...");
+        // Close the logger.
+        logger.close();
+        // Terminate the layers.
+        terminate();
+        return new AckResponse(null);
     }
 }

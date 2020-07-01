@@ -39,7 +39,8 @@ public enum RequestType {
     JOIN("join"),
     SEARCH("search"),
     INITIALIZE("initialize"),
-    EXPERIMENT("experiment");
+    EXPERIMENT("experiment"),
+    TERMINATE("terminate");
 
     public final String str;
 

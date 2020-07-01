@@ -86,7 +86,7 @@ public class TTP extends Layer {
         if(lastNumID >= systemParameters.SYSTEM_CAPACITY) {
             return new RegistrationResponse("TTP.register: system capacity reached");
         }
-        if(registrations.containsKey(request.senderAddress)) {
+        if(registrations.containsKey(request.sourceAddress)) {
             return new RegistrationResponse("TTP.register: already registered");
         }
         // Find the numerical id of the node.
@@ -102,33 +102,33 @@ public class TTP extends Layer {
         // Find an initiator address for the registered node so that it can insert itself into the skip graph.
         String initiatorAddress = (registrations.isEmpty()) ? null : ((RegisteredNodeInformation) registrations.values().toArray()[0]).address;
         // Save the node information.
-        registrations.put(request.senderAddress, new RegisteredNodeInformation(request.senderAddress, numID, nameID, signatureKey));
-        nameIDAddresses.put(nameID, request.senderAddress);
+        registrations.put(request.sourceAddress, new RegisteredNodeInformation(request.sourceAddress, numID, nameID, signatureKey));
+        nameIDAddresses.put(nameID, request.sourceAddress);
         // Return the response.
         return new RegistrationResponse(true, numID, nameID, signatureKeyMemento, publicParametersMemento, systemParameters, initiatorAddress);
     }
 
     public AuthChallengeResponse authChallenge(AuthChallengeRequest request) {
         // Choose the correct challenge map depending on the request.
-        RegisteredNodeInformation info = registrations.get(request.senderAddress);
+        RegisteredNodeInformation info = registrations.get(request.sourceAddress);
         if(info == null) {
             return new AuthChallengeResponse(null, "TTP.authChallenge: node is not registered");
         }
-        if(authChallenges.containsKey(request.senderAddress)) {
+        if(authChallenges.containsKey(request.sourceAddress)) {
             return new AuthChallengeResponse(null, "TTP.authChallenge: node is already being challenged");
         }
         String challenge = GuardHelpers.randomBitString(systemParameters.MESSAGE_LENGTH);
         // Save it.
-        authChallenges.put(request.senderAddress, challenge);
+        authChallenges.put(request.sourceAddress, challenge);
         return new AuthChallengeResponse(challenge, null);
     }
 
     public RetrieveGuardsResponse retrieveGuards(RetrieveGuardsRequest request) {
         // Check for authentication.
-        if(!checkChallengeSolution(request.senderAddress, request.challengeSolution)) {
+        if(!checkChallengeSolution(request.sourceAddress, request.challengeSolution)) {
             return new RetrieveGuardsResponse("TTP.retrieveGuards: could not authenticate");
         }
-        RegisteredNodeInformation nodeInformation = registrations.get(request.senderAddress);
+        RegisteredNodeInformation nodeInformation = registrations.get(request.sourceAddress);
         // Validate the table proof.
         boolean tableProofValid = TTPHelpers.verifyLookupTable(request.circularLookupTable, request.tableProof, scheme, systemParameters);
         if(!tableProofValid) {
@@ -159,10 +159,10 @@ public class TTP extends Layer {
 
     public RetrieveGuardInfoResponse retrieveGuardInfo(RetrieveGuardKeysRequest request) {
         // First, authenticate.
-        if(!checkChallengeSolution(request.senderAddress, request.challengeSolution)) {
+        if(!checkChallengeSolution(request.sourceAddress, request.challengeSolution)) {
             return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: could not authenticate");
         }
-        RegisteredNodeInformation guardInformation = registrations.get(request.senderAddress);
+        RegisteredNodeInformation guardInformation = registrations.get(request.sourceAddress);
         if(guardInformation == null) {
             return new RetrieveGuardInfoResponse("TTP.retrieveGuardKeys: not registered");
         }

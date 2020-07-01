@@ -1,6 +1,7 @@
 package authentication.packets.requests;
 
 import authentication.RoutingProof;
+import misc.Logger;
 import skipnode.packets.requests.RouteSearchNumIDRequest;
 
 import java.util.LinkedList;
@@ -14,6 +15,8 @@ public class AuthRouteSearchNumIDRequest extends RouteSearchNumIDRequest {
         super(target, level);
         this.routingProofs = routingProofs;
         this.nonce = nonce;
+        this.auth = true;
+        this.phase = Logger.Phase.SEARCH;
     }
 
 }

@@ -1,5 +1,6 @@
 package authentication.packets.requests;
 
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 
@@ -14,5 +15,7 @@ public class GetTableProofEntryRequest extends Request {
         this.requesterNumID = requesterNumID;
         this.neighborLevel = neighborLevel;
         this.relativePosition = relativePosition;
+        this.auth = true;
+        this.phase = Logger.Phase.CONSTRUCTION;
     }
 }

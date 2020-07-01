@@ -1,5 +1,7 @@
 package communication;
 
+import misc.GlobalRand;
+import misc.Logger;
 import network.Layer;
 import network.Request;
 import network.Response;
@@ -17,10 +19,16 @@ public class RMIHost extends UnicastRemoteObject implements RMIService {
     private final Layer overlay;
     // The address of the process that this service was constructed on.
     private final String hostAddress;
+    // Logger that will be used to log the receipt of request and sent of responses.
+    private Logger logger = new Logger();
 
     public RMIHost(Layer overlay, String hostAddress) throws RemoteException {
         this.overlay = overlay;
         this.hostAddress = hostAddress;
+    }
+
+    public void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
     /**
@@ -30,14 +38,23 @@ public class RMIHost extends UnicastRemoteObject implements RMIService {
      */
     @Override
     public Response sendRequest(Request request) {
+        // Log the receipt of request.
+        logger.logRequestReceived(request);
         // Receive the response from the upper layer.
         Response response = overlay.receive(request);
         if(response.isError()) {
             System.err.println("[UnderlayHost] " + hostAddress + " has emitted: " + response.errorMessage);
         }
         // Piggyback the addresses to the response.
-        response.senderAddress = hostAddress;
-        response.destinationAddress = request.senderAddress;
+        response.sourceAddress = hostAddress;
+        response.destinationAddress = request.sourceAddress;
+        // Copy the data from the request.
+        response.phase = request.phase;
+        response.auth = request.auth;
+        // Assign a random ID for the response.
+        response.id = Integer.toUnsignedLong(GlobalRand.rand.nextInt());
+        // Log the sending of response.
+        logger.logResponseSent(response, request);
         return response;
     }
 

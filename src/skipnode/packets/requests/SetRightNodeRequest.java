@@ -1,5 +1,6 @@
 package skipnode.packets.requests;
 
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 import skipnode.NodeInfo;
@@ -12,5 +13,6 @@ public class SetRightNodeRequest extends Request {
         super(RequestType.SET_RIGHT_NODE);
         this.level = level;
         this.nodeInfo = nodeInfo;
+        this.phase = Logger.Phase.CONSTRUCTION;
     }
 }

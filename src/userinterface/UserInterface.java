@@ -25,7 +25,6 @@ public abstract class UserInterface extends Layer {
             int input = promptInteger("Make a selection");
             if(!handleUserInput(input)) break;
         }
-        terminate();
     }
 
     protected int promptInteger(String prompt) {

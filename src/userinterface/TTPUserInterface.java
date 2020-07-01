@@ -7,6 +7,7 @@ import ttp.SystemParameters;
 import ttp.TTP;
 import userinterface.packets.requests.ExperimentRequest;
 import userinterface.packets.requests.InitializeRequest;
+import userinterface.packets.requests.TerminationRequest;
 
 import java.util.List;
 import java.util.Scanner;
@@ -33,7 +34,7 @@ public class TTPUserInterface extends UserInterface {
                 "1. Show registered nodes\n" +
                 "2. Broadcast initialize requests\n" +
                 "3. Start experiments\n" +
-                "4. Terminate\n";
+                "4. Terminate the skip-graph\n";
     }
 
     @Override
@@ -72,6 +73,16 @@ public class TTPUserInterface extends UserInterface {
                 }
                 break;
             case 4:
+                // Broadcast the termination requests to every node.
+                for(String address : addresses) {
+                    Response r = send(address, new TerminationRequest());
+                    if(r.isError()) {
+                        System.err.println("Error during termination: " + r.errorMessage);
+                    }
+                }
+                // Terminate the TTP.
+                logger.close();
+                terminate();
                 return false;
         }
         return true;

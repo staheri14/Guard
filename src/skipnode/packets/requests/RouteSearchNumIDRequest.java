@@ -1,5 +1,6 @@
 package skipnode.packets.requests;
 
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 
@@ -12,5 +13,6 @@ public class RouteSearchNumIDRequest extends Request {
         super(RequestType.ROUTE_SEARCH_NUM_ID);
         this.target = target;
         this.level = level;
+        this.phase = Logger.Phase.SEARCH;
     }
 }

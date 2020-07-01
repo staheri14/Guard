@@ -1,5 +1,6 @@
 package authentication.packets.requests;
 
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 import skipnode.NodeInfo;
@@ -13,5 +14,7 @@ public class SetGuardNeighborRequest extends Request {
         super(RequestType.SET_GUARD_NEIGHBOR);
         this.position = position;
         this.neighbor = neighbor;
+        this.auth = true;
+        this.phase = Logger.Phase.CONSTRUCTION;
     }
 }

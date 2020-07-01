@@ -1,6 +1,7 @@
 package ttp.packets.requests;
 
 import crypto.memento.SignatureMemento;
+import misc.Logger;
 import network.Request;
 import network.RequestType;
 
@@ -15,5 +16,7 @@ public class RetrieveGuardKeysRequest extends Request {
         this.challengeSolution = challengeSolution;
         this.guardedNodeAddress = guardedNodeAddress;
         this.guardIndex = guardIndex;
+        this.auth = true;
+        this.phase = Logger.Phase.GUARD_ASSIGNMENT;
     }
 }

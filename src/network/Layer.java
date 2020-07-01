@@ -1,5 +1,7 @@
 package network;
 
+import misc.Logger;
+
 /**
  * Represents a network layer.
  */
@@ -9,6 +11,16 @@ public abstract class Layer {
     protected Layer overlay;
     // The lower layer. Should be null if the layer is the lowermost layer.
     protected Layer underlay;
+    // Used to log the events happening at the log. If not set, then no logging happens.
+    protected Logger logger = new Logger();
+
+    /**
+     * Sets the logger to be used by this layer.
+     * @param logger the logger to use.
+     */
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
 
     public Layer getUnderlay() {
         return underlay;

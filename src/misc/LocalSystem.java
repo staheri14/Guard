@@ -7,6 +7,7 @@ import skipnode.SkipNode;
 
 /**
  * Represents a local authenticated skip graph. Can be used for testing.
+ * Please note that no logging is done in a local system.
  */
 public class LocalSystem {
 

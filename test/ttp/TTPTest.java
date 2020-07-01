@@ -26,18 +26,18 @@ class TTPTest {
     @Test
     void register() {
         RegisterRequest registerRequest = new RegisterRequest();
-        registerRequest.senderAddress = "0.0.0.0";
+        registerRequest.sourceAddress = "0.0.0.0";
         RegistrationResponse regResponse = ttp.register(registerRequest);
         Assertions.assertNotNull(regResponse);
         Assertions.assertFalse(regResponse.isError());
         Assertions.assertTrue(regResponse.successful);
 
         AuthChallengeRequest authChallengeRequest = new AuthChallengeRequest();
-        authChallengeRequest.senderAddress = "0.0.0.1";
+        authChallengeRequest.sourceAddress = "0.0.0.1";
         AuthChallengeResponse authChallengeResponse = ttp.authChallenge(authChallengeRequest);
         Assertions.assertTrue(authChallengeResponse.isError());
 
-        authChallengeRequest.senderAddress = "0.0.0.0";
+        authChallengeRequest.sourceAddress = "0.0.0.0";
         authChallengeResponse = ttp.authChallenge(authChallengeRequest);
         Assertions.assertFalse(authChallengeResponse.isError());
     }

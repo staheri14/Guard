@@ -150,7 +150,7 @@ public class Authentication extends Layer {
      * @return the partial signature of the routing transcript.
      */
     public PartialSignatureResponse getGuardSignature(GetGuardSignatureRequest request) {
-        String guardedNodeAddress = request.senderAddress;
+        String guardedNodeAddress = request.sourceAddress;
         if(!guardInformation.containsKey(guardedNodeAddress)) {
             return new PartialSignatureResponse(null, "Authentication.getGuardSignature: not a guard of this node");
         }
@@ -552,13 +552,13 @@ public class Authentication extends Layer {
         if(challengeSolution == null) {
             return new AckResponse("Authentication.informGuard: could not authenticate with TTP");
         }
-        Response r = sendTTP(new RetrieveGuardKeysRequest(challengeSolution, request.senderAddress, request.guardIndex));
+        Response r = sendTTP(new RetrieveGuardKeysRequest(challengeSolution, request.sourceAddress, request.guardIndex));
         authenticationLock.unlock();
         if(r.isError()) {
             return new AckResponse(r.errorMessage);
         }
         RetrieveGuardInfoResponse guardKeys = (RetrieveGuardInfoResponse) r;
-        guardInformation.put(request.senderAddress, guardKeys);
+        guardInformation.put(request.sourceAddress, guardKeys);
         return new AckResponse(null);
     }
 }

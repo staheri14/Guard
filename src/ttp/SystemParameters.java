@@ -21,7 +21,7 @@ public class SystemParameters implements Serializable {
     public final int NONCE_LENGTH = 10;
 
     /** Experiment parameters **/
-    public final int ROUND_COUNT = 1000;
+    public final int ROUND_COUNT = 10;
     public final int WAIT_TIME = 5;
 
     /** Authentication parameters **/

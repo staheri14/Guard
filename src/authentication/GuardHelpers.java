@@ -1,5 +1,6 @@
 package authentication;
 
+import misc.GlobalRand;
 import ttp.SystemParameters;
 
 import java.math.BigInteger;
@@ -10,7 +11,6 @@ import java.security.SecureRandom;
 public class GuardHelpers {
 
     static MessageDigest digest = null;
-    public static SecureRandom rand = new SecureRandom();
 
     /**
      * Constructs a message to be signed by the neighbor of the node to be put in a table proof.
@@ -82,7 +82,7 @@ public class GuardHelpers {
     public static String randomBitString(int size) {
         StringBuilder s = new StringBuilder();
         while(s.length() < size) {
-            s.append(rand.nextBoolean() ? '0' : '1');
+            s.append(GlobalRand.rand.nextBoolean() ? '0' : '1');
         }
         return s.toString();
     }
