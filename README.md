@@ -37,7 +37,7 @@ The parameters related to the experiment is also defined in the `SystemParameter
 ## Running
 This implementation of Guard requires Java 11 to run. Please install the appropriate JRE before running. 
 
-To run Guard, go to the `out` directory where the `Guard.jar` can be found. This executable can be run in two different modes: (1) TTP mode, and (2) node mode.
+To run Guard, go to the `out/artifacts/Guard_jar` directory where the `Guard.jar` can be found. This executable can be run in two different modes: (1) TTP mode, and (2) node mode.
 Each system needs to have one TTP and `SYSTEM_CAPACITY` many nodes. To run as TTP, do the following:
 ```bash
 $ java -jar Guard.jar ttp <port>
@@ -84,4 +84,16 @@ A single log has the following fields:
 The logs emitted by every node is located at the `out/logs` directory in `csv` format. If the nodes are executed in different machines, the files need to be collected from
 every machine to a central location. We recommend using `scp`.
  
-After every log file is collected at a single location, we can make use of the provided Python scripts to take measurements
+After every log file is collected at a single location, we can make use of the provided Python scripts to take measurements. The scripts are located in the
+`experiment_scripts` folder. There are two scripts: (1) `filter.py` and (2) `experiment.py`. The first script filters out the
+results that are interest to us, and merges all the logs into a single file. The second script takes the merged file and performs
+measurements on them.
+````bash
+python3 filter.py
+````
+will merge all the log files in the `logs` folder located in the directory of the script, and generates `filtered_logs.csv` next
+to the script. Then, we can do
+````bash
+python3 experiment.py
+````
+to take measurements on the `filtered_logs.csv`.

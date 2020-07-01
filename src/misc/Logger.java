@@ -187,7 +187,7 @@ public class Logger {
     public long logProcessStart(String type) {
         if(invalid) return -1;
         long processID = Integer.toUnsignedLong(GlobalRand.rand.nextInt());
-        String messageType =  type + "_start";
+        String messageType =  type + "_begin";
         Phase phase = typePhases.get(type);
         Mode mode = typeModes.get(type);
         if(phase == null || mode == null) {
