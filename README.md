@@ -33,7 +33,7 @@ A *round* is defined as following
 
 The parameters related to the experiment is also defined in the `SystemParameters.java` file: 
 1. **ROUND_COUNT:** Denotes how many rounds a single node needs to complete.
-2. **WAIT_TIME:** In order to avoid congestion, the nodes wait before proceeding to the next round. The waiting time (in seconds) is chosen uniformly from [0, `WAIT_TIME`].
+2. **WAIT_TIME:** In order to avoid congestion, the nodes wait before proceeding to the next round. The waiting time (in seconds) is chosen uniformly from [1, `WAIT_TIME`].
 ## Running
 This implementation of Guard requires Java 11 to run. Please install the appropriate JRE before running. 
 

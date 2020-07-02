@@ -125,7 +125,7 @@ public class NodeUserInterface extends UserInterface {
         for(int i = 0; i < request.rounds; i++) {
             System.out.println("** Experiment round: " + (i + 1) + "/" + request.rounds);
             // Find a random target.
-            int target = request.minNumID + GlobalRand.rand.nextInt(request.minNumID + request.maxNumID);
+            int target = request.minNumID + GlobalRand.rand.nextInt(request.maxNumID - request.minNumID + 1);
             // Perform an unauthenticated search on the target.
             SearchResultResponse unauthResult = search(new SearchRequest(target, false));
             if(unauthResult.isError()) {
@@ -146,7 +146,7 @@ public class NodeUserInterface extends UserInterface {
             }
             if(request.maxWaitTime == 0) continue;
             // Choose a random wait time.
-            int waitTime = GlobalRand.rand.nextInt(request.maxWaitTime);
+            int waitTime = 1 + GlobalRand.rand.nextInt(request.maxWaitTime);
             try {
                 Thread.sleep(waitTime * 1000);
             } catch (InterruptedException e) {
