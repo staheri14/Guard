@@ -1,5 +1,6 @@
 package misc;
 
+import network.Packet;
 import network.Request;
 import network.Response;
 
@@ -121,7 +122,7 @@ public class Logger {
     public void logRequestSent(Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_request";
-        long messageSize = 0;
+        long messageSize = Packet.calculateSize(request);
         logMessage(request.id, Event.SENT, request.sourceAddress, (request.auth) ? Mode.AUTH : Mode.UNAUTH,
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
@@ -133,7 +134,7 @@ public class Logger {
     public void logRequestReceived(Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_request";
-        long messageSize = 0;
+        long messageSize = Packet.calculateSize(request);
         logMessage(request.id, Event.RECEIVED, request.destinationAddress, (request.auth) ? Mode.AUTH : Mode.UNAUTH,
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
@@ -146,7 +147,7 @@ public class Logger {
     public void logResponseSent(Response response, Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_response";
-        long messageSize = 0;
+        int messageSize = Packet.calculateSize(response);
         logMessage(response.id, Event.SENT, response.sourceAddress, (request.auth) ? Mode.AUTH : Mode.UNAUTH,
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }
@@ -159,7 +160,7 @@ public class Logger {
     public void logResponseReceived(Response response, Request request) {
         if(invalid) return;
         String messageType = request.type.str + "_response";
-        long messageSize = 0;
+        int messageSize = Packet.calculateSize(response);
         logMessage(response.id, Event.RECEIVED, response.destinationAddress, (request.auth) ? Mode.AUTH : Mode.UNAUTH,
                 request.phase, messageType, messageSize, System.currentTimeMillis());
     }

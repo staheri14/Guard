@@ -77,7 +77,7 @@ A single log has the following fields:
 3. **address:** The address of the node that the log is emitted from.
 4. **phase:** The phase in which the event has occurred. Can be **registration**, **construction**, **guard_assignment** or **search**. For events that do not particularly belong to a phase, this is set to **unknown**.
 5. **type:** This denotes the type of the event, i.e. an explanation on what the event actually is about. For example, for a **sent** event, this field contains the name of the request/response that was sent.
-6. **msg_size:** The size of the transmitted message for the **sent** or **received** events.
+6. **msg_size:** The size of the transmitted message for the **sent** or **received** events (measured in bytes.)
 7. **time:** The local time of the machine in milliseconds when the log was emitted.
 
 ## Taking measurements
