@@ -63,7 +63,7 @@ public class TTPUserInterface extends UserInterface {
                     SystemParameters systemParameters = ttp.getSystemParameters();
                     // Form the experiment request that should be sent to every node.
                     ExperimentRequest experimentRequest = new ExperimentRequest(systemParameters.ROUND_COUNT,
-                            0, 0, systemParameters.SYSTEM_CAPACITY);
+                            0, 0, systemParameters.SYSTEM_CAPACITY-1);
                     for(String address : addresses) {
                         Response r = send(address, experimentRequest);
                         if(r.isError()) {
@@ -97,7 +97,7 @@ public class TTPUserInterface extends UserInterface {
         SystemParameters systemParameters = ttp.getSystemParameters();
         // Form the experiment request that should be concurrently sent to every node.
         ExperimentRequest experimentRequest = new ExperimentRequest(systemParameters.ROUND_COUNT,
-                systemParameters.WAIT_TIME, 0, systemParameters.SYSTEM_CAPACITY);
+                systemParameters.WAIT_TIME, 0, systemParameters.SYSTEM_CAPACITY-1);
         Thread[] threads = new Thread[addresses.size()];
         for(int i = 0; i < threads.length; i++) {
             String address = addresses.get(i);
