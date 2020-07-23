@@ -1,3 +1,5 @@
+# WARNING: DEPRECATED!!
+
 import csv
 import glob
 

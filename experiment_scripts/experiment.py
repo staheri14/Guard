@@ -38,11 +38,6 @@ recorder = Recorder()
 recorder.createRecordedParameter("auth_delay")
 recorder.createRecordedParameter("unauth_delay")
 recorder.createRecordedParameter("route_delay")
-recorder.createRecordedParameter("verify_delay")
-recorder.createRecordedParameter("sign_delay")
-recorder.createRecordedParameter("partial_sign_delay")
-recorder.createRecordedParameter("reconstruct_delay")
-recorder.createParameter("search_path_length")
 
 def nextSequentialIndex(address, indexMap):
     if address not in indexMap:
@@ -56,7 +51,7 @@ def lastSequentialIndex(address, indexMap):
         return -1
     return indexMap[address]
 
-with open("filtered_logs.csv") as file:
+with open("merged_logs.csv") as file:
     reader = csv.DictReader(file, delimiter=',')
     for row in reader:
         address = row["address"]
@@ -73,24 +68,6 @@ with open("filtered_logs.csv") as file:
             recorder.startRecording("route_delay", address + row["msg_id"], time)
         elif row["type"] == "auth_route_search_end":
             recorder.finalizeRecording("route_delay", address + row["msg_id"], time)
-        elif row["type"] == "verify_begin":
-            recorder.startRecording("verify_delay", address + row["msg_id"], time)
-        elif row["type"] == "verify_end":
-            recorder.finalizeRecording("verify_delay", address + row["msg_id"], time)
-        elif row["type"] == "sign_begin":
-            recorder.startRecording("sign_delay", address + row["msg_id"], time)
-        elif row["type"] == "sign_end":
-            recorder.finalizeRecording("sign_delay", address + row["msg_id"], time)
-        elif row["type"] == "partial_sign_begin":
-            recorder.startRecording("partial_sign_delay", address + row["msg_id"], time)
-        elif row["type"] == "partial_sign_end":
-            recorder.finalizeRecording("partial_sign_delay", address + row["msg_id"], time)
-        elif row["type"] == "reconstruct_begin":
-            recorder.startRecording("reconstruct_delay", address + row["msg_id"], time)
-        elif row["type"] == "reconstruct_end":
-            recorder.finalizeRecording("reconstruct_delay", address + row["msg_id"], time)
-        elif row["type"] == "search_path_length":
-            recorder.record("search_path_length", int(row["msg_size"]))
 
 auth_delay = recorder.getRecordedAverage("auth_delay")
 unauth_delay = recorder.getRecordedAverage("unauth_delay")
@@ -98,12 +75,4 @@ unauth_delay = recorder.getRecordedAverage("unauth_delay")
 print("Avg auth delay: " + str(auth_delay))
 print("Avg unauth delay: " + str(unauth_delay))
 print("Factor of increase: " + str(auth_delay/unauth_delay))
-
 print("Avg route delay: " + str(recorder.getRecordedAverage("route_delay")))
-print("Avg search path length: " + str(recorder.getAverage("search_path_length")))
-
-
-print("Avg verification delay: " + str(recorder.getRecordedAverage("verify_delay")))
-print("Avg sign delay: " + str(recorder.getRecordedAverage("sign_delay")))
-print("Avg partial sign delay: " + str(recorder.getRecordedAverage("partial_sign_delay")))
-print("Avg reconstruct delay: " + str(recorder.getRecordedAverage("reconstruct_delay")))

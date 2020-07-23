@@ -1,6 +1,6 @@
 # Guard
 Guard is a secure routing protocol for skip-graphs. It makes use of digital signature schemes and supervisor nodes called *guards* to assert the correctness of lookup operations.
-This particular implementation makes use of [jPBC library](http://gas.dia.unisa.it/projects/jpbc/) and a heavily modified version of the open-source SkipGraph implementation provided [here](https://github.com/yhassanzadeh13/SkipGraphNode).
+This particular implementation makes use of [jPBC library](http://gas.dia.unisa.it/projects/jpbc/) for the pairings and a heavily modified version of the open-source SkipGraph implementation provided [here](https://github.com/yhassanzadeh13/SkipGraphNode).
 ## Layers
 This implementation makes use of a layered architecture. From bottom to top, the layers for an authenticated node are as following:
 1. **Communication layer:** Handles node-to-node communication.
@@ -64,7 +64,8 @@ Once you run the application in `node` mode, the node will automatically registe
 1. **Show registered nodes:** Shows the list of registered nodes.
 2. **Broadcast initialize requests:** Initializes every registered node (i.e. runs the construction and guard assignment phases) and makes the skip-graph ready for authenticated searches.
 3. **Start experiments:** Runs the experiments. Each node will perform `ROUND_COUNT` many *round*s to complete the experiment.
-4. **Terminate the skip-graph:** Terminates the TTP and remotely terminates every registered node in the skip-graph.
+4. **Collect logs:** Downloads the log files stored at every registered node in the system and merges them into a single `.csv` file.
+5. **Terminate the skip-graph:** Terminates the TTP and remotely terminates every registered node in the skip-graph.
 
 After all the nodes are registered with the TTP, the whole experiment can be controlled through TTP.
 In order to take measurements, the operations need to be performed with respect to their numerical order (i.e. first 2, then 3, and finally 4.) 
@@ -82,18 +83,14 @@ A single log has the following fields:
 
 ## Taking measurements
 The logs emitted by every node is located at the `out/logs` directory in `csv` format. If the nodes are executed in different machines, the files need to be collected from
-every machine to a central location. We recommend using `scp`.
+every machine to a central location. For the sake of simplicity, we have provided this functionality through TTP. Choosing the 4th option on the TTP interface will download the logs from
+every node registered in the system and merge them into a single file (sorted by the `time` field.) Then, the downloaded logs and the merged version can be located at the `received_logs`
+directory.
  
-After every log file is collected at a single location, we can make use of the provided Python scripts to take measurements. The scripts are located in the
-`experiment_scripts` folder. There are two scripts: (1) `filter.py` and (2) `experiment.py`. The first script filters out the
-results that are interest to us, and merges all the logs into a single file. The second script takes the merged file and performs
-measurements on them.
-````bash
-python3 filter.py
-````
-will merge all the log files in the `logs` folder located in the directory of the script, and generates `filtered_logs.csv` next
-to the script. Then, we can do
-````bash
-python3 experiment.py
-````
-to take measurements on the `filtered_logs.csv`.
+Since the log files are in `.csv` format, performing queries on them is relatively easy. We have provided an example Python script (i.e. `experiment.py`)
+located at `experiment_scripts` folder. This script will perform the following measurements:
+1. **Avg. authenticated delay:** Average time it takes (in ms) for an authenticated search to be resolved.
+2. **Avg. unauthenticated delay:** Average time it takes (in ms) for an unauthenticated search to be resolved.
+3. **Factor of increase:** Gives us a metric of how performant authenticated search is as compared to the unauthenticated search. 
+Calculated by `x/y` where x is the avg. authenticated delay and y is the avg. unauthenticated delay.
+4. **Avg. route delay:** Average time it takes for the authentication layer to route a search request to the next hop.
