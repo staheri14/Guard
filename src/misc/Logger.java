@@ -70,6 +70,9 @@ public class Logger {
         }
     }
 
+    // The path of the log file.
+    private final String filePath;
+    // Used to write entries into the log file.
     private BufferedWriter writer;
     // Whether this logger is invalid or not. An invalid logger does not write anything to the disk.
     private boolean invalid;
@@ -85,9 +88,10 @@ public class Logger {
         typeModes = new HashMap<>();
         this.address = address;
         invalid = false;
+        filePath = "logs/" + address.replace(':', '_') + "_logs.csv";
         try {
             // Get the appropriate log file.
-            File file = new File("logs/" + address.replace(':', '_') + "_logs.csv");
+            File file = new File(filePath);
             // Create the logs directory if not present.
             file.getParentFile().mkdirs();
             // Create the file writer.
@@ -113,6 +117,15 @@ public class Logger {
         typeModes = null;
         typePhases = null;
         address = null;
+        filePath = null;
+    }
+
+    /**
+     * Returns the path of the log file that is being written on.
+     * @return the path of the log file.
+     */
+    public String getFilePath() {
+        return filePath;
     }
 
     /**

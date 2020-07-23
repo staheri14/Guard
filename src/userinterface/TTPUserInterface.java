@@ -8,6 +8,7 @@ import ttp.TTP;
 import userinterface.packets.requests.ExperimentRequest;
 import userinterface.packets.requests.InitializeRequest;
 import userinterface.packets.requests.TerminationRequest;
+import userinterface.workers.RetrieveFileWorker;
 
 import java.util.List;
 import java.util.Scanner;
@@ -34,7 +35,8 @@ public class TTPUserInterface extends UserInterface {
                 "1. Show registered nodes\n" +
                 "2. Broadcast initialize requests\n" +
                 "3. Start experiments\n" +
-                "4. Terminate the skip-graph\n";
+                "4. Collect data from the nodes\n" +
+                "5. Terminate the skip-graph\n";
     }
 
     @Override
@@ -73,6 +75,22 @@ public class TTPUserInterface extends UserInterface {
                 }
                 break;
             case 4:
+                Thread[] threads = new Thread[addresses.size()];
+                for(int i = 0; i < addresses.size(); i++) {
+                    String filePath = "received_logs/" + addresses.get(i).replace(':', '_') + ".csv";
+                    threads[i] = new Thread(new RetrieveFileWorker(this, filePath, addresses.get(i)));
+                }
+                for(Thread t : threads) t.start();
+                for(Thread t : threads) {
+                    try {
+                        t.join();
+                    } catch (InterruptedException e) {
+                        System.err.println("Could not join the thread.");
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            case 5:
                 // Broadcast the termination requests to every node.
                 for(String address : addresses) {
                     Response r = send(address, new TerminationRequest());

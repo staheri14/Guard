@@ -17,7 +17,11 @@ import skipnode.packets.responses.SearchResultResponse;
 import ttp.SystemParameters;
 import userinterface.packets.requests.ExperimentRequest;
 import userinterface.packets.requests.SearchRequest;
+import userinterface.packets.responses.DataFileResponse;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class NodeUserInterface extends UserInterface {
@@ -40,6 +44,7 @@ public class NodeUserInterface extends UserInterface {
             case INITIALIZE -> initializeGuard();
             case EXPERIMENT -> experiment((ExperimentRequest) request);
             case TERMINATE -> terminateNode();
+            case RECEIVE_DATA -> receiveData();
             default -> null;
         };
     }
@@ -188,6 +193,26 @@ public class NodeUserInterface extends UserInterface {
         SearchResultResponse resResponse = (SearchResultResponse) r;
         System.out.println(resResponse);
         return resResponse;
+    }
+
+    public DataFileResponse receiveData() {
+        // Close the logger.
+        logger.close();
+        System.out.println("Logger closed. The logs are being sent...");
+        String logPath = logger.getFilePath();
+        if(logPath == null) {
+            return new DataFileResponse("no log file", null);
+        }
+        byte[] fileBytes = null;
+        // Read the file into the memory.
+        try {
+            fileBytes = Files.readAllBytes(Paths.get(logPath));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new DataFileResponse("error reading file into memory", null);
+        }
+        // Return the file.
+        return new DataFileResponse(null, fileBytes);
     }
 
     public AckResponse terminateNode() {

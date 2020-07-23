@@ -40,7 +40,8 @@ public enum RequestType {
     SEARCH("search"),
     INITIALIZE("initialize"),
     EXPERIMENT("experiment"),
-    TERMINATE("terminate");
+    TERMINATE("terminate"),
+    RECEIVE_DATA("receive_data");
 
     public final String str;
 

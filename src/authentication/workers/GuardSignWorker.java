@@ -25,9 +25,7 @@ public class GuardSignWorker implements Runnable {
     @Override
     public void run() {
         Response r = authentication.send(guardAddress, new GetGuardSignatureRequest(transcript));
-        if(r == null) {
-            errorMsg = "could not connect to the guard";
-        } else if(r.isError()) {
+        if(r.isError()) {
             errorMsg = r.errorMessage;
         } else {
             signatureShare = ((PartialSignatureResponse) r).partialSignature;
