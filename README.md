@@ -82,7 +82,7 @@ A single log has the following fields:
 7. **time:** The local time of the machine in milliseconds when the log was emitted.
 
 ## Taking measurements
-The logs emitted by every node is located at the `out/logs` directory in `csv` format. If the nodes are executed in different machines, the files need to be collected from
+The logs emitted by every node are located at the `out/logs` directory in `.csv` format. If the nodes are executed in different machines, the files need to be collected from
 every machine to a central location. For the sake of simplicity, we have provided this functionality through TTP. Choosing the 4th option on the TTP interface will download the logs from
 every node registered in the system and merge them into a single file (sorted by the `time` field.) Then, the downloaded logs and the merged version can be located at the `received_logs`
 directory.
