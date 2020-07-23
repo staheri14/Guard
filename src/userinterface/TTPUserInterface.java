@@ -1,5 +1,6 @@
 package userinterface;
 
+import misc.Logger;
 import network.Request;
 import network.Response;
 import ttp.RegisteredNodeInformation;
@@ -10,9 +11,16 @@ import userinterface.packets.requests.InitializeRequest;
 import userinterface.packets.requests.TerminationRequest;
 import userinterface.workers.RetrieveFileWorker;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TTPUserInterface extends UserInterface {
 
@@ -76,6 +84,7 @@ public class TTPUserInterface extends UserInterface {
                 break;
             case 4:
                 Thread[] threads = new Thread[addresses.size()];
+                // Receive the individual log files from the nodes concurrently.
                 for(int i = 0; i < addresses.size(); i++) {
                     String filePath = "received_logs/" + addresses.get(i).replace(':', '_') + ".csv";
                     threads[i] = new Thread(new RetrieveFileWorker(this, filePath, addresses.get(i)));
@@ -88,6 +97,48 @@ public class TTPUserInterface extends UserInterface {
                         System.err.println("Could not join the thread.");
                         e.printStackTrace();
                     }
+                }
+                // Merge them into a single file.
+                System.out.println("Collected the logs. Now merging...");
+                try(Stream<Path> paths = Files.walk(Paths.get("received_logs/"))) {
+                    List<BufferedReader> fileReaders = paths.filter(Files::isRegularFile)
+                            .map(Path::toFile)
+                            .map(x -> {
+                                try {
+                                    return new BufferedReader(new FileReader(x));
+                                } catch (FileNotFoundException e) {
+                                    System.err.println("Error while opening the file.");
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            })
+                            .collect(Collectors.toList());
+                    // Collect all the log entries, sorted by time.
+                    List<LogEntry> logEntries = fileReaders.stream()
+                            .flatMap(BufferedReader::lines) // Expand as lines.
+                            .filter(line -> !line.startsWith("msg_id")) // Skip the field headers line.
+                            .map(line -> {
+                                // Map a single line of a csv file to a log entry.
+                                String[] fields = line.split(";");
+                                long time = 0;
+                                try {
+                                    time = Long.parseLong(fields[7]);
+                                } catch(Exception e) {
+                                    System.err.println("Could not parse time at line: " + line);
+                                    return null;
+                                }
+                                return new LogEntry(time, line);
+                            })
+                            .filter(Objects::nonNull) // Filter out the problematic lines.
+                            .sorted(Comparator.comparingLong(x -> x.time)) // Sort by the time.
+                            .collect(Collectors.toList()); // Collect as list.
+                    // Write the logs to a single file utilizing the logger class.
+                    Logger mergedLogger = new Logger("merged", "received_logs");
+                    logEntries.forEach(x -> mergedLogger.writeLogToFile(x.entry));
+                    // Close the logger.
+                    mergedLogger.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
                 break;
             case 5:

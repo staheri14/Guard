@@ -84,11 +84,15 @@ public class Logger {
     private final String address;
 
     public Logger(String address) {
+        this(address, "logs");
+    }
+
+    public Logger(String address, String directory) {
         typePhases = new HashMap<>();
         typeModes = new HashMap<>();
         this.address = address;
         invalid = false;
-        filePath = "logs/" + address.replace(':', '_') + "_logs.csv";
+        filePath = directory + "/" + address.replace(':', '_') + "_logs.csv";
         try {
             // Get the appropriate log file.
             File file = new File(filePath);
@@ -237,7 +241,11 @@ public class Logger {
         writeLogToFile(log);
     }
 
-    private synchronized void writeLogToFile(String log) {
+    /**
+     * Writes a single line to the log file, appending a new line.
+     * @param log the line to write.
+     */
+    public synchronized void writeLogToFile(String log) {
         if(invalid) return;
         try {
             writer.write(log);
