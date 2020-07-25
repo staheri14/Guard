@@ -1,6 +1,6 @@
 # Guard
 Guard is a secure routing protocol for skip-graphs. It makes use of digital signature schemes and supervisor nodes called *guards* to assert the correctness of lookup operations.
-This particular implementation makes use of [jPBC library](http://gas.dia.unisa.it/projects/jpbc/) for the pairings and a heavily modified version of the open-source SkipGraph implementation provided [here](https://github.com/yhassanzadeh13/SkipGraphNode).
+This particular implementation makes use of [GuardCrypto](http://github.com/utkn/GuardCrypto) for the digital signature scheme and a heavily modified version of the open-source SkipGraph implementation provided [here](https://github.com/yhassanzadeh13/SkipGraphNode).
 ## Layers
 This implementation makes use of a layered architecture. From bottom to top, the layers for an authenticated node are as following:
 1. **Communication layer:** Handles node-to-node communication.
