@@ -10,7 +10,7 @@ public class Main {
      * @return the system parameters.
      */
     public static SystemParameters getSystemParameters() {
-        return new SystemParameters(4, true, true);
+        return new SystemParameters();
     }
 
     /**

@@ -11,7 +11,7 @@ public abstract class Layer {
     protected Layer overlay;
     // The lower layer. Should be null if the layer is the lowermost layer.
     protected Layer underlay;
-    // Used to log the events happening at the log. If not set, then no logging happens.
+    // Used to log the events happening at the layer. If not set, then no logging happens.
     protected Logger logger = new Logger();
 
     /**

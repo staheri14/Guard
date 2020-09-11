@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class SystemParameters implements Serializable {
 
     // Number of nodes in the system.
-    public final int SYSTEM_CAPACITY;
+    public int SYSTEM_CAPACITY = 4;
     // Identity length for the signature scheme.
     public final int IDENTITY_LENGTH = 256;
     // Message length for the signature scheme.
@@ -27,10 +27,13 @@ public class SystemParameters implements Serializable {
     /** Authentication parameters **/
     // Whether the piggybacked routing proofs should be verified at the
     // search initiator.
-    public final boolean VERIFY_AT_INITIATOR;
+    public boolean VERIFY_AT_INITIATOR = true;
     // Whether the routing proof of each node should be verified by the subsequent
     // node at the search path.
-    public final boolean VERIFY_AT_ROUTER;
+    public boolean VERIFY_AT_ROUTER = false;
+
+    public SystemParameters() {
+    }
 
     public SystemParameters(int systemCapacity, boolean verifyAtInitiator, boolean verifyAtRouter) {
         SYSTEM_CAPACITY = systemCapacity;
