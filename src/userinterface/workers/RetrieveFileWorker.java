@@ -39,6 +39,7 @@ public class RetrieveFileWorker implements Runnable {
             System.out.println("Received logs from " + targetAddress + "!");
             try {
                 File file = new File(filePath);
+                file.getParentFile().mkdirs();
                 Files.write(file.toPath(), dataFileResp.fileBytes);
             } catch (IOException e) {
                 System.err.println("Could not write the file to the disk.");
